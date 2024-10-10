@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "922424141325",
+    "project_id": "alonsodev-59063",
+    "storage_bucket": "alonsodev-59063.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922424141325:android:9126ffb8a7c82be5fd9744",
+        "android_client_info": {
+          "package_name": "alonso.wallet.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "922424141325-kk8ukq22qphvtam0uncs87j7evooua3f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDttZ9BtpHMhSmSsUSKClhs-zSnU-7Olw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "922424141325-kk8ukq22qphvtam0uncs87j7evooua3f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "922424141325-ak0b1hf567icvp6tb07531ma0bo0cd10.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.alonsodev.crud.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
