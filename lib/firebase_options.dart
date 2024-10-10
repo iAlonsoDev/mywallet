@@ -41,52 +41,52 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBhcITl8myjvabrnwAcWlA805J3mLkK1gE',
-    appId: '1:922424141325:web:589736d644029c6ffd9744',
-    messagingSenderId: '922424141325',
-    projectId: 'alonsodev-59063',
-    authDomain: 'alonsodev-59063.firebaseapp.com',
-    storageBucket: 'alonsodev-59063.appspot.com',
-    measurementId: 'G-6K79YXWRCV',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    authDomain: '',
+    storageBucket: '',
+    measurementId: '',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDDttZ9BtpHMhSmSsUSKClhs-zSnU-7Olw',
-    appId: '1:922424141325:android:9126ffb8a7c82be5fd9744',
-    messagingSenderId: '922424141325',
-    projectId: 'alonsodev-59063',
-    storageBucket: 'alonsodev-59063.appspot.com',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    storageBucket: '',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB0UPGtJhgHSB6e0F4UA0LbRI7pDug6kGY',
-    appId: '1:922424141325:ios:37af6cf7b2658b3dfd9744',
-    messagingSenderId: '922424141325',
-    projectId: 'alonsodev-59063',
-    storageBucket: 'alonsodev-59063.appspot.com',
-    androidClientId: '922424141325-2hqrq3aqbavsaqsl2n32tmkrrcqama02.apps.googleusercontent.com',
-    iosClientId: '922424141325-nc8ib8konc2r901akmk723g96pje14te.apps.googleusercontent.com',
-    iosBundleId: 'com.example.mywallet',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    storageBucket: '',
+    androidClientId: '',
+    iosClientId: '',
+    iosBundleId: '',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB0UPGtJhgHSB6e0F4UA0LbRI7pDug6kGY',
-    appId: '1:922424141325:ios:37af6cf7b2658b3dfd9744',
-    messagingSenderId: '922424141325',
-    projectId: 'alonsodev-59063',
-    storageBucket: 'alonsodev-59063.appspot.com',
-    androidClientId: '922424141325-2hqrq3aqbavsaqsl2n32tmkrrcqama02.apps.googleusercontent.com',
-    iosClientId: '922424141325-nc8ib8konc2r901akmk723g96pje14te.apps.googleusercontent.com',
-    iosBundleId: 'com.example.mywallet',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    storageBucket: '',
+    androidClientId: '',
+    iosClientId: '',
+    iosBundleId: '',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBhcITl8myjvabrnwAcWlA805J3mLkK1gE',
-    appId: '1:922424141325:web:1ec6be45daa52c74fd9744',
-    messagingSenderId: '922424141325',
-    projectId: 'alonsodev-59063',
-    authDomain: 'alonsodev-59063.firebaseapp.com',
-    storageBucket: 'alonsodev-59063.appspot.com',
-    measurementId: 'G-28JRRFF6V4',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
+    authDomain: '',
+    storageBucket: '',
+    measurementId: '',
   );
 }
