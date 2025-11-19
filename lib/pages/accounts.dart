@@ -52,12 +52,7 @@ class _AccountsState extends State<Accounts> {
         final status = accountData["status"] ?? "0";
 
         // Banco de la cuenta
-        final idbank = cache.transactions
-            .firstWhere(
-              (t) => t['idaccount'] == idaccount,
-              orElse: () => {'idbank': '0'},
-            )['idbank']
-            .toString();
+        final idbank = accountData["idbank"]?.toString() ?? "0";
         final bankName = cache.getBankName(idbank);
 
         return Container(
@@ -77,12 +72,15 @@ class _AccountsState extends State<Accounts> {
                   Text(
                     nameaccount,
                     style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(bankName,
-                      style: const TextStyle(
-                          fontSize: 10, color: Colors.black54)),
+                  Text(
+                    bankName,
+                    style: const TextStyle(fontSize: 10, color: Colors.black54),
+                  ),
                   Text(
                     status == "1" ? "ACTIVE" : "DISABLED",
                     style: TextStyle(
@@ -104,8 +102,7 @@ class _AccountsState extends State<Accounts> {
                         idedit = idaccount;
                         namecontroller.text = nameaccount;
                         idbankcontroller = idbank;
-                        _selectedStatus =
-                            status == "1" ? "ACTIVE" : "DISABLE";
+                        _selectedStatus = status == "1" ? "ACTIVE" : "DISABLE";
                         statuscontroller = status;
                       });
                     },
@@ -115,7 +112,7 @@ class _AccountsState extends State<Accounts> {
                     onPressed: () => _confirmDeleteAccount(idaccount),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -134,9 +131,9 @@ class _AccountsState extends State<Accounts> {
             children: [
               //const CircleAvatar(
               //  radius: 22,
-             //  backgroundColor: Colors.black,
-             //   child: Icon(Icons.account_circle, color: Colors.white),
-             // ),
+              //  backgroundColor: Colors.black,
+              //   child: Icon(Icons.account_circle, color: Colors.white),
+              // ),
               const SizedBox(height: 20),
 
               // Formulario
@@ -150,29 +147,35 @@ class _AccountsState extends State<Accounts> {
                   children: [
                     // 🔹 Dropdown de bancos desde cache
                     DropdownButton<String>(
-                      value: idbankcontroller.isNotEmpty
-                          ? idbankcontroller
-                          : (cache.banksMap.keys.isNotEmpty
-                              ? cache.banksMap.keys.first
-                              : '0'),
+                      value:
+                          idbankcontroller.isNotEmpty
+                              ? idbankcontroller
+                              : (cache.banksMap.keys.isNotEmpty
+                                  ? cache.banksMap.keys.first
+                                  : '0'),
                       isExpanded: true,
                       onChanged: (val) {
                         if (val != null) {
                           setState(() => idbankcontroller = val);
                         }
                       },
-                      items: cache.banksMap.entries
-                          .map((e) => DropdownMenuItem<String>(
-                                value: e.key,
-                                child: Text(e.value["name"] ?? "Unknown"),
-                              ))
-                          .toList(),
+                      items:
+                          cache.banksMap.entries
+                              .map(
+                                (e) => DropdownMenuItem<String>(
+                                  value: e.key,
+                                  child: Text(e.value["name"] ?? "Unknown"),
+                                ),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: namecontroller,
                       decoration: const InputDecoration(
-                          hintText: "Account Name", border: InputBorder.none),
+                        hintText: "Account Name",
+                        border: InputBorder.none,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     DropdownButton<String>(
@@ -186,10 +189,13 @@ class _AccountsState extends State<Accounts> {
                           });
                         }
                       },
-                      items: ['ACTIVE', 'DISABLE']
-                          .map((s) =>
-                              DropdownMenuItem(value: s, child: Text(s)))
-                          .toList(),
+                      items:
+                          ['ACTIVE', 'DISABLE']
+                              .map(
+                                (s) =>
+                                    DropdownMenuItem(value: s, child: Text(s)),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -197,29 +203,41 @@ class _AccountsState extends State<Accounts> {
                       children: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 84, 135, 180)),
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              84,
+                              135,
+                              180,
+                            ),
+                          ),
                           onPressed: _addAccount,
-                          child: const Text("Add",
-                              style: TextStyle(color: Colors.white)),
+                          child: const Text(
+                            "Add",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange),
+                            backgroundColor: Colors.orange,
+                          ),
                           onPressed: _updateAccount,
-                          child: const Text("Update",
-                              style: TextStyle(color: Colors.white)),
+                          child: const Text(
+                            "Update",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
 
               // Lista cuentas
-              const Text("All Accounts",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const Text(
+                "All Accounts",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               allAccountsDetails(),
             ],
@@ -268,8 +286,7 @@ class _AccountsState extends State<Accounts> {
       "nameaccount": namecontroller.text,
       "status": statuscontroller,
     };
-    await DatabaseMethods()
-        .updateAccountDetails(newData, idaccount.toString());
+    await DatabaseMethods().updateAccountDetails(newData, idaccount.toString());
     toastification.show(
       context: context,
       title: const Text("Account updated"),
@@ -284,20 +301,26 @@ class _AccountsState extends State<Accounts> {
   }
 
   Future<void> _confirmDeleteAccount(String idAccount) async {
-    final ok = await showDialog<bool>(
+    final ok =
+        await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("Confirm Delete!"),
-            content: const Text("Are you sure you want to delete this account?"),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Cancel")),
-              TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Delete")),
-            ],
-          ),
+          builder:
+              (context) => AlertDialog(
+                title: const Text("Confirm Delete!"),
+                content: const Text(
+                  "Are you sure you want to delete this account?",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Cancel"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text("Delete"),
+                  ),
+                ],
+              ),
         ) ??
         false;
 

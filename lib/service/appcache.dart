@@ -40,6 +40,7 @@ class AppCache {
     accountsMap = {
       for (var doc in snapshot.docs)
         doc["idaccount"].toString(): {
+          "idbank": (doc["idbank"] ?? "0").toString(),
           "name": (doc["nameaccount"] ?? "").toString(),
           "status": (doc["status"] ?? "0").toString(),
         }
