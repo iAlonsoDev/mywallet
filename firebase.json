@@ -1,0 +1,58 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "alonsodev-59063",
+          "appId": "1:922424141325:android:17544f24d7d0f5c2fd9744",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "alonsodev-59063",
+          "configurations": {
+            "android": "1:922424141325:android:17544f24d7d0f5c2fd9744",
+            "ios": "1:922424141325:ios:37af6cf7b2658b3dfd9744",
+            "macos": "1:922424141325:ios:37af6cf7b2658b3dfd9744",
+            "web": "1:922424141325:web:589736d644029c6ffd9744",
+            "windows": "1:922424141325:web:1ec6be45daa52c74fd9744"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net;"
+          }
+        ]
+      }
+    ]
+  }
+}
