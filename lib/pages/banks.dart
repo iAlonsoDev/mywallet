@@ -38,7 +38,15 @@ class _BanksState extends State<Banks> {
   // === Listado de bancos ===
   Widget allBanksDetails() {
     if (cache.banksMap.isEmpty) {
-      return const Center(child: Text("No banks found"));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            "No hay bancos registrados",
+            style: TextStyle(color: Colors.grey[500], fontSize: 14),
+          ),
+        ),
+      );
     }
 
     final banksList = cache.banksMap.entries.toList();
@@ -56,87 +64,125 @@ class _BanksState extends State<Banks> {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Imagen del banco
               imageUrl.isNotEmpty
-                  ? ClipOval(
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
                       child: CachedNetworkImage(
                         imageUrl: imageUrl,
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
-                          width: 40,
-                          height: 40,
-                          color: Colors.grey[300],
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 1.5),
                           ),
                         ),
-                        errorWidget: (context, url, error) => CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.grey[300],
-                          child: const Icon(Icons.account_balance, size: 20),
+                        errorWidget: (context, url, error) => Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.account_balance, size: 18, color: Colors.grey[400]),
                         ),
                       ),
                     )
-                  : CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey[300],
-                      child: const Icon(Icons.account_balance),
+                  : Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.account_balance, size: 18, color: Colors.grey[400]),
                     ),
-              const SizedBox(width: 10),
-              // Info
+              const SizedBox(width: 12),
+
+              // Info - 80%
               Expanded(
+                flex: 8,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       namebank,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      status == "1" ? "ACTIVE" : "DISABLED",
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: status == "1" ? Colors.green : Colors.redAccent,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: status == "1"
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        status == "1" ? "ACTIVE" : "DISABLED",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: status == "1" ? Colors.green[700] : Colors.red[700],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Botones acción
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      setState(() {
-                        idcontroller = idbank;
-                        namecontroller.text = namebank;
-                        imagecontroller.text = imageUrl;
-                        statuscontroller = status;
-                        _selectedStatus = status == '1' ? 'ACTIVE' : 'DISABLE';
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _confirmDeleteBank(idbank),
-                  ),
-                ],
+              // Botones acción - 20%
+              Expanded(
+                flex: 27,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          idcontroller = idbank;
+                          namecontroller.text = namebank;
+                          imagecontroller.text = imageUrl;
+                          statuscontroller = status;
+                          _selectedStatus = status == '1' ? 'ACTIVE' : 'DISABLE';
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(Icons.edit_outlined, size: 24, color: Colors.blue[600]),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => _confirmDeleteBank(idbank),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(Icons.delete_outline, size: 24, color: Colors.red[600]),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -148,184 +194,418 @@ class _BanksState extends State<Banks> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
-              
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
-              // Formulario
+              // Header moderno
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[600]!, Colors.blue[800]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.account_balance, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Bank Management",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.grey[900],
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Text(
+                        "Manage your financial institutions",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Formulario estilo Dribbble
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 40,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      controller: namecontroller,
-                      decoration: const InputDecoration(
-                        labelText: "Nombre del Banco",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Subir Imagen del Banco',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    UploadImageWidget(
-                      initialImageUrl: imagecontroller.text.isNotEmpty ? imagecontroller.text : null,
-                      onUploaded: (url) {
-                        if (mounted) {
-                          setState(() {
-                            imagecontroller.text = url;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedStatus,
-                      decoration: const InputDecoration(
-                        labelText: "Estado",
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedStatus = newValue;
-                            statuscontroller = newValue == 'ACTIVE' ? '1' : '0';
-                          });
-                        }
-                      },
-                      items:
-                          <String>['ACTIVE', 'DISABLE']
-                              .map<DropdownMenuItem<String>>(
-                                (String value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ),
-                              )
-                              .toList(),
-                    ),
-                    const SizedBox(height: 20),
+
+                    // Label moderno
                     Row(
                       children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.blue[400]!, Colors.blue[600]!],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
-                            child: const Text("Agregar"),
-                            onPressed: () async {
-                              final idbank =
-                                  idcontroller.isEmpty
-                                      ? await getNextId()
-                                      : int.parse(idcontroller);
-
-                              final newBank = {
-                                "idbank": idbank,
-                                "namebank": namecontroller.text,
-                                "image": imagecontroller.text,
-                                "status": statuscontroller,
-                              };
-
-                              await DatabaseMethods().addBankDetails(
-                                newBank,
-                                idbank.toString(),
-                              );
-
-                              toastification.show(
-                                context: context,
-                                title: const Text("Banco agregado exitosamente!"),
-                                autoCloseDuration: const Duration(seconds: 3),
-                                type: ToastificationType.success,
-                              );
-
-                              setState(() {
-                                namecontroller.clear();
-                                imagecontroller.clear();
-                              });
-                              await _loadBanks();
-                            },
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[600],
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text("Actualizar"),
-                            onPressed: () async {
-                              if (idcontroller.isEmpty) return;
-
-                              final idbank = int.parse(idcontroller);
-                              final updateBank = {
-                                "idbank": idbank,
-                                "namebank": namecontroller.text,
-                                "image": imagecontroller.text,
-                                "status": statuscontroller,
-                              };
-
-                              await DatabaseMethods().updateBankDetails(
-                                updateBank,
-                                idbank.toString(),
-                              );
-
-                              toastification.show(
-                                context: context,
-                                title: const Text("Banco actualizado exitosamente!"),
-                                autoCloseDuration: const Duration(seconds: 3),
-                                type: ToastificationType.info,
-                              );
-
-                              setState(() {
-                                namecontroller.clear();
-                                imagecontroller.clear();
-                                idcontroller = '';
-                              });
-                              await _loadBanks();
-                            },
+                        Text(
+                          "Bank Information",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[800],
+                            letterSpacing: -0.3,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 18),
+
+                    // Nombre del banco - Input moderno
+                    TextField(
+                      controller: namecontroller,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        labelText: "Bank Name",
+                        labelStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Sección de imagen y estado con diseño moderno
+                    Row(
+                      children: [
+                        // Widget de imagen rediseñado
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              
+                              const SizedBox(height: 4),
+                              UploadImageWidget(
+                                initialImageUrl: imagecontroller.text.isNotEmpty ? imagecontroller.text : null,
+                                onUploaded: (url) {
+                                  if (mounted) {
+                                    setState(() {
+                                      imagecontroller.text = url;
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 18),
+
+                        // Switch moderno con gradiente
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: statuscontroller == '1'
+                                        ? [Colors.green[50]!, Colors.green[100]!]
+                                        : [Colors.red[50]!, Colors.red[100]!],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: statuscontroller == '1'
+                                        ? Colors.green[200]!
+                                        : Colors.red[200]!,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          statuscontroller == '1' ? Icons.check_circle : Icons.cancel,
+                                          color: statuscontroller == '1' ? Colors.green[700] : Colors.red[700],
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          statuscontroller == '1' ? "Active" : "Inactive",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: statuscontroller == '1' ? Colors.green[800] : Colors.red[800],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Switch(
+                                      value: statuscontroller == '1',
+                                      onChanged: (value) {
+                                        setState(() {
+                                          statuscontroller = value ? '1' : '0';
+                                          _selectedStatus = value ? 'ACTIVE' : 'DISABLE';
+                                        });
+                                      },
+                                      activeTrackColor: Colors.green[400],
+                                      activeThumbColor: Colors.white,
+                                      inactiveTrackColor: Colors.red[300],
+                                      inactiveThumbColor: Colors.white,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Botón con gradiente moderno
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: idcontroller.isEmpty
+                                    ? [Colors.blue[600]!, Colors.blue[800]!]
+                                    : [Colors.teal[600]!, Colors.teal[800]!],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (idcontroller.isEmpty ? Colors.blue : Colors.teal).withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 18),
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              onPressed: () async {
+                                final isEditing = idcontroller.isNotEmpty;
+                                final idbank = isEditing ? int.parse(idcontroller) : await getNextId();
+
+                                final bankData = {
+                                  "idbank": idbank,
+                                  "namebank": namecontroller.text,
+                                  "image": imagecontroller.text,
+                                  "status": statuscontroller,
+                                };
+
+                                if (isEditing) {
+                                  await DatabaseMethods().updateBankDetails(bankData, idbank.toString());
+                                  toastification.show(
+                                    context: context,
+                                    title: const Text("Bank updated successfully!"),
+                                    autoCloseDuration: const Duration(seconds: 3),
+                                    type: ToastificationType.info,
+                                  );
+                                } else {
+                                  await DatabaseMethods().addBankDetails(bankData, idbank.toString());
+                                  toastification.show(
+                                    context: context,
+                                    title: const Text("Bank added successfully!"),
+                                    autoCloseDuration: const Duration(seconds: 3),
+                                    type: ToastificationType.success,
+                                  );
+                                }
+
+                                setState(() {
+                                  namecontroller.clear();
+                                  imagecontroller.clear();
+                                  idcontroller = '';
+                                });
+                                await _loadBanks();
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    idcontroller.isEmpty ? Icons.add_circle_outline : Icons.check_circle_outline,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    idcontroller.isEmpty ? "Add Bank" : "Update Bank",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (idcontroller.isNotEmpty) ...[
+                          const SizedBox(width: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.grey[300]!, width: 1),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  namecontroller.clear();
+                                  imagecontroller.clear();
+                                  idcontroller = '';
+                                  statuscontroller = '1';
+                                  _selectedStatus = 'ACTIVE';
+                                });
+                              },
+                              icon: const Icon(Icons.close_rounded, size: 22),
+                              color: Colors.grey[700],
+                              padding: const EdgeInsets.all(14),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
 
-              // Lista bancos
-              const Text(
-                "Todos los Bancos",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // Header de lista moderno
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.purple[400]!, Colors.purple[600]!],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "List",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey[900],
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.purple[50],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.purple[200]!, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.list_alt, size: 16, color: Colors.purple[700]),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${cache.banksMap.length}",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.purple[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               allBanksDetails(),
             ],
           ),

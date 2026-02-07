@@ -108,66 +108,75 @@ class _UploadImageWidgetState extends State<UploadImageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Center(
+      child: Stack(
         children: [
-          if (isUploading)
-            const Center(child: CircularProgressIndicator())
-          else if (uploadedImageUrl != null)
-            Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    imageUrl: uploadedImageUrl!,
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 100,
-                      width: 100,
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => const Icon(
-                      Icons.error,
-                      color: Colors.red,
-                      size: 50,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Imagen subida',
-                  style: TextStyle(color: Colors.green, fontSize: 12),
-                ),
-              ],
-            )
-          else
-            const Text(
-              'No se ha seleccionado ninguna imagen',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+          // Imagen o placeholder
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[300]!, width: 2),
             ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: isUploading ? null : pickAndUploadImage,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: isUploading
+                ? const Center(
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  )
+                : uploadedImageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: CachedNetworkImage(
+                          imageUrl: uploadedImageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Icons.account_balance,
+                            color: Colors.grey[400],
+                            size: 40,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        Icons.account_balance,
+                        color: Colors.grey[400],
+                        size: 40,
+                      ),
+          ),
+
+          // Botón flotante de cámara
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: isUploading ? null : pickAndUploadImage,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
-            child: Text(uploadedImageUrl != null ? 'Cambiar Imagen' : 'Seleccionar Imagen'),
           ),
         ],
       ),
