@@ -30,9 +30,6 @@ class _BanksState extends State<Banks> {
   Future<void> _loadBanks() async {
     await cache.loadStaticData(); // carga Banks al cache
     if (mounted) setState(() {});
-    getNextId().then((maxId) {
-      idcontroller = maxId.toString();
-    });
   }
 
   // === Listado de bancos ===
@@ -63,128 +60,162 @@ class _BanksState extends State<Banks> {
         final imageUrl = bankData["image"] ?? "";
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-          ),
-          child: Row(
-            children: [
-              // Imagen del banco
-              imageUrl.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(strokeWidth: 1.5),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(Icons.account_balance, size: 18, color: Colors.grey[400]),
-                        ),
-                      ),
-                    )
-                  : Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.account_balance, size: 18, color: Colors.grey[400]),
-                    ),
-              const SizedBox(width: 12),
-
-              // Info - 80%
-              Expanded(
-                flex: 8,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      namebank,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: status == "1"
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        status == "1" ? "ACTIVE" : "DISABLED",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: status == "1" ? Colors.green[700] : Colors.red[700],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Botones acción - 20%
-              Expanded(
-                flex: 27,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          idcontroller = idbank;
-                          namecontroller.text = namebank;
-                          imagecontroller.text = imageUrl;
-                          statuscontroller = status;
-                          _selectedStatus = status == '1' ? 'ACTIVE' : 'DISABLE';
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Icon(Icons.edit_outlined, size: 24, color: Colors.blue[600]),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => _confirmDeleteBank(idbank),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Icon(Icons.delete_outline, size: 24, color: Colors.red[600]),
-                      ),
-                    ),
-                  ],
-                ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
             ],
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                setState(() {
+                  idcontroller = idbank;
+                  namecontroller.text = namebank;
+                  imagecontroller.text = imageUrl;
+                  statuscontroller = status;
+                  _selectedStatus = status == '1' ? 'ACTIVE' : 'DISABLE';
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    // Imagen del banco con diseño moderno
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          colors: [Colors.grey[100]!, Colors.grey[200]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(color: Colors.grey[300]!, width: 1),
+                      ),
+                      child: imageUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(11),
+                              child: CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.blue[600],
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  Icons.account_balance_outlined,
+                                  size: 24,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            )
+                          : Icon(Icons.account_balance_outlined, size: 24, color: Colors.grey[400]),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Información del banco
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            namebank,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                              letterSpacing: -0.2,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: status == "1"
+                                    ? [Colors.green[50]!, Colors.green[100]!]
+                                    : [Colors.red[50]!, Colors.red[100]!],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: status == "1" ? Colors.green[200]! : Colors.red[200]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  status == "1" ? Icons.check_circle : Icons.cancel,
+                                  size: 12,
+                                  color: status == "1" ? Colors.green[700] : Colors.red[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  status == "1" ? "Active" : "Inactive",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: status == "1" ? Colors.green[800] : Colors.red[800],
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Botones de acción
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              idcontroller = idbank;
+                              namecontroller.text = namebank;
+                              imagecontroller.text = imageUrl;
+                              statuscontroller = status;
+                              _selectedStatus = status == '1' ? 'ACTIVE' : 'DISABLE';
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(Icons.edit_outlined, size: 24, color: Colors.blue[600]),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => _confirmDeleteBank(idbank),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(Icons.delete_outline, size: 24, color: Colors.red[600]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         );
       },
