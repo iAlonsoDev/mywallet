@@ -45,11 +45,11 @@ String formatAmountNum(num amount) {
 String mapType(String type) {
   switch (type) {
     case 'DEPOSIT':
-      return 'DEPÓSITO';
+      return 'Deposit';
     case 'WITHDRAWAL':
-      return 'RETIRO';
+      return 'Withdrawal';
     case 'TRANSFER':
-      return 'TRANSFERENCIA';
+      return 'Transfer';
     default:
       return type;
   }
@@ -57,18 +57,18 @@ String mapType(String type) {
 
 String mapTypeToDB(String type) {
   switch (type) {
-    case 'DEPÓSITO':
+    case 'Deposit':
       return 'DEPOSIT';
-    case 'RETIRO':
+    case 'Withdrawal':
       return 'WITHDRAWAL';
-    case 'TRANSFERENCIA':
+    case 'Transfer':
       return 'TRANSFER';
     default:
       return type;
   }
 }
 
-/// ---------- Modelos ----------
+/// ---------- Models ----------
 class Bank {
   final String idbank;
   final String namebank;
@@ -128,14 +128,14 @@ class _TransactionsState extends State<Transactions> {
   final datecontroller = TextEditingController();
 
   // State
-  String _selectedType = 'DEPÓSITO';
+  String _selectedType = 'Deposit';
   String idedit = '';
   String idcontroller = '';
   String idbankcontroller = '';
   String idaccountcontroller = '';
   double totSummary = 0.0;
 
-  // Destino para transferencias
+  // Destination for transfers
   String idbankcontrollerDest = '';
   String idaccountcontrollerDest = '';
   Bank? _selectedBankDest;
@@ -143,29 +143,14 @@ class _TransactionsState extends State<Transactions> {
   List<Account> _accountsDest = <Account>[];
 
   List<Bank> _banks = <Bank>[];
-  Bank _selectedBank = Bank(idbank: '0', namebank: 'BANKS', statusbank: '0');
+  Bank? _selectedBank;
 
   List<AllBank> _allbanks = <AllBank>[];
-  final AllBank _selectedallBank = AllBank(
-    allidbank: '0',
-    allnamebank: 'BANKS',
-    allstatusbank: '0',
-  );
 
   List<Account> _accounts = <Account>[];
-
-  Account _selectedAccount = Account(
-    idaccount: '0',
-    nameaccount: 'ACCOUNTS',
-    statusaccount: '0',
-  );
+  Account? _selectedAccount;
 
   List<AllAccount> _allaccounts = <AllAccount>[];
-  final AllAccount _selectedallAccount = AllAccount(
-    allidaccount: '0',
-    allnameaccount: 'ACCOUNTS',
-    allstatusaccount: '0',
-  );
 
   // Streams
   Stream<QuerySnapshot<Map<String, dynamic>>>? transactionsStream;
@@ -182,13 +167,7 @@ class _TransactionsState extends State<Transactions> {
     getOnTheLoad();
     fetchBanksData();
     fetchallBanksData();
-    fetchAccountsData();
     fetchallAccountsData();
-    getNextId().then((values) {
-      idcontroller = values["maxId"].toString();
-      if (mounted) setState(() {});
-    });
-
     amountcontroller.addListener(_handleAmountChange);
   }
 
@@ -204,274 +183,803 @@ class _TransactionsState extends State<Transactions> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                
-                const SizedBox(height: 20),
-
-                // Formulario
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header moderno
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [const Color.fromARGB(255, 74, 111, 190), const Color.fromARGB(255, 29, 86, 109)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      DropdownButtonFormField<Bank>(
-                        initialValue:
-                            _banks.firstWhereOrNull(
-                              (b) => b.idbank == idbankcontroller,
-                            ) ??
-                            (_banks.isNotEmpty ? _banks.first : null),
-                        decoration: const InputDecoration(
-                          labelText: "Banco",
-                          border: OutlineInputBorder(),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        items:
-                            _banks
-                                .map(
-                                  (b) => DropdownMenuItem(
-                                    value: b,
-                                    child: Text(b.namebank),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) async {
-                          if (v != null) {
-                            setState(() {
-                              _selectedBank = v;
-                              idbankcontroller = v.idbank;
-                            });
-                            await fetchAccountsData();
-                          }
-                        },
+                        child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
                       ),
-
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<Account>(
-                        initialValue: _accounts.firstWhereOrNull(
-                          (a) => a.idaccount == idaccountcontroller,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: "Cuenta",
-                          border: OutlineInputBorder(),
-                        ),
-                        items:
-                            _accounts
-                                .map(
-                                  (a) => DropdownMenuItem(
-                                    value: a,
-                                    child: Text(a.nameaccount),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() {
-                              _selectedAccount = v;
-                              idaccountcontroller = v.idaccount;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: detailscontroller,
-                        decoration: const InputDecoration(
-                          labelText: "Detalles de la Transacción",
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: amountcontroller,
-                              textAlign: TextAlign.right,
-                              decoration: const InputDecoration(
-                                labelText: "Monto",
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Transaction Management",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              controller: summarycontroller,
-                              textAlign: TextAlign.right,
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                labelText: "Resumen",
-                                border: OutlineInputBorder(),
+                            Text(
+                              "Track your finances",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedType,
-                        decoration: const InputDecoration(
-                          labelText: "Tipo",
-                          border: OutlineInputBorder(),
+                          ],
                         ),
-                        items:
-                            <String>['DEPÓSITO', 'RETIRO', 'TRANSFERENCIA']
-                                .map(
-                                  (v) =>
-                                      DropdownMenuItem(value: v, child: Text(v)),
-                                )
-                                .toList(),
-                        onChanged: (v) => setState(() => _selectedType = v!),
-                      ),
-
-                      // 🔹 Solo en transfer
-                      if (_selectedType == "TRANSFERENCIA") ...[
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<Bank>(
-                          initialValue: _banks.firstWhereOrNull(
-                            (b) => b.idbank == idbankcontrollerDest,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: "Banco Destino",
-                            border: OutlineInputBorder(),
-                          ),
-                          items:
-                              _banks
-                                  .map(
-                                    (b) => DropdownMenuItem(
-                                      value: b,
-                                      child: Text(b.namebank),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) async {
-                            if (v != null) {
-                              setState(() {
-                                _selectedBankDest = v;
-                                idbankcontrollerDest = v.idbank;
-                                idaccountcontrollerDest =
-                                    ''; // reset cuenta destino
-                              });
-                              await fetchAccountsDestData(); // 🔹 cargar cuentas del banco destino
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<Account>(
-                          initialValue: _accountsDest.firstWhereOrNull(
-                            (a) => a.idaccount == idaccountcontrollerDest,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: "Cuenta Destino",
-                            border: OutlineInputBorder(),
-                          ),
-                          items:
-                              _accountsDest
-                                  .map(
-                                    (a) => DropdownMenuItem(
-                                      value: a,
-                                      child: Text(a.nameaccount),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) {
-                            if (v != null) {
-                              setState(() {
-                                _selectedAccountDest = v;
-                                idaccountcontrollerDest = v.idaccount;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: _addTransaction,
-                              child: const Text("Agregar"),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey[600],
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: _updateTransaction,
-                              child: const Text("Actualizar"),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          
-          Expanded(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: const Text(
-                    "Todas las Transacciones",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 16),
+                  // Balance Card
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Total Balance",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              formatAmountNum(totSummary),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: totSummary >= 0 ? Colors.green[700] : Colors.red[700],
+                                letterSpacing: -1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: totSummary >= 0
+                                  ? [Colors.green[50]!, Colors.green[100]!]
+                                  : [Colors.red[50]!, Colors.red[100]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            totSummary >= 0 ? Icons.trending_up : Icons.trending_down,
+                            color: totSummary >= 0 ? Colors.green[700] : Colors.red[700],
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(child: _allTransactionsDetails()),
-              ],
+                ],
+              ),
             ),
+
+            // List header
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange[400]!, Colors.orange[600]!],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Recent Transactions",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey[900],
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Transactions list
+            Expanded(child: _allTransactionsDetails()),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showTransactionModal(),
+        backgroundColor: const Color.fromARGB(255, 72, 123, 143),
+        elevation: 4,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          "New Transaction",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
-        ],
+        ),
       ),
     );
   }
 
-  /// ---------- Métodos Add/Update ----------
+  /// ========== MODAL BOTTOM SHEET ==========
+  void _showTransactionModal({String? editId}) async {
+    if (editId != null) {
+      await _loadTransactionForEdit(editId);
+    } else {
+      _clearForm();
+      // Auto-load first bank and its first account for new transactions
+      if (_banks.isNotEmpty) {
+        final firstBank = _banks.first;
+        setState(() {
+          _selectedBank = firstBank;
+          idbankcontroller = firstBank.idbank;
+        });
+        await fetchAccountsData();
+        if (_accounts.isNotEmpty) {
+          final firstAccount = _accounts.first;
+          setState(() {
+            _selectedAccount = firstAccount;
+            idaccountcontroller = firstAccount.idaccount;
+          });
+        }
+      }
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.teal[400]!, Colors.teal[600]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.receipt_long, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              idedit.isEmpty ? "New Transaction" : "Edit Transaction",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey[900],
+                              ),
+                            ),
+                            Text(
+                              "Fill in the details below",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Divider(height: 1, color: Colors.grey[200]),
+
+                // Form
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Bank dropdown
+                        _buildModernDropdown<Bank>(
+                          label: "Bank",
+                          value: _selectedBank ?? (_banks.isNotEmpty ? _banks.first : null),
+                          items: _banks,
+                          itemBuilder: (bank) => Text(bank.namebank),
+                          onChanged: (bank) async {
+                            if (bank != null) {
+                              setModalState(() {
+                                _selectedBank = bank;
+                                idbankcontroller = bank.idbank;
+                                _selectedAccount = null;
+                                idaccountcontroller = '';
+                              });
+                              setState(() {
+                                _selectedBank = bank;
+                                idbankcontroller = bank.idbank;
+                                _selectedAccount = null;
+                                idaccountcontroller = '';
+                              });
+                              await fetchAccountsData();
+
+                              // Auto-select first account
+                              if (_accounts.isNotEmpty) {
+                                final firstAccount = _accounts.first;
+                                setModalState(() {
+                                  _selectedAccount = firstAccount;
+                                  idaccountcontroller = firstAccount.idaccount;
+                                });
+                                setState(() {
+                                  _selectedAccount = firstAccount;
+                                  idaccountcontroller = firstAccount.idaccount;
+                                });
+                              }
+
+                              setModalState(() {});
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Account dropdown
+                        _buildModernDropdown<Account>(
+                          label: "Account",
+                          value: _selectedAccount,
+                          items: _accounts,
+                          itemBuilder: (account) => Text(account.nameaccount),
+                          onChanged: (account) {
+                            if (account != null) {
+                              setModalState(() {
+                                _selectedAccount = account;
+                                idaccountcontroller = account.idaccount;
+                              });
+                              setState(() {
+                                _selectedAccount = account;
+                                idaccountcontroller = account.idaccount;
+                              });
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Details
+                        _buildModernTextField(
+                          controller: detailscontroller,
+                          label: "Transaction Details",
+                          icon: Icons.description_outlined,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Amount and Summary
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: amountcontroller,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                                decoration: InputDecoration(
+                                  labelText: "Amount",
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.teal[400]!, width: 2),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                ),
+                                onChanged: (value) {
+                                  final amount = asDouble(value);
+                                  if (amount != 0.0) {
+                                    final newType = amount < 0 ? 'Withdrawal' : 'Deposit';
+                                    setModalState(() {
+                                      _selectedType = newType;
+                                    });
+                                    setState(() {
+                                      _selectedType = newType;
+                                    });
+                                  }
+                                  // Update summary
+                                  final newSummary = totSummary + amount;
+                                  summarycontroller.text = newSummary.toStringAsFixed(2);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildModernTextField(
+                                controller: summarycontroller,
+                                label: "Summary",
+                                icon: Icons.calculate_outlined,
+                                readOnly: true,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Type selector
+                        Text(
+                          "Transaction Type",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTypeChip(
+                                'Deposit',
+                                Icons.arrow_downward,
+                                Colors.green,
+                                setModalState,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildTypeChip(
+                                'Withdrawal',
+                                Icons.arrow_upward,
+                                Colors.red,
+                                setModalState,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildTypeChip(
+                                'Transfer',
+                                Icons.swap_horiz,
+                                Colors.blue,
+                                setModalState,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Transfer destination (only if Transfer)
+                        if (_selectedType == "Transfer") ...[
+                          const SizedBox(height: 24),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue[200]!, width: 1),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.send, color: Colors.blue[700], size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Transfer Destination",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.blue[900],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildModernDropdown<Bank>(
+                                  label: "Destination Bank",
+                                  value: _selectedBankDest,
+                                  items: _banks,
+                                  itemBuilder: (bank) => Text(bank.namebank),
+                                  onChanged: (bank) async {
+                                    if (bank != null) {
+                                      setModalState(() {
+                                        _selectedBankDest = bank;
+                                        idbankcontrollerDest = bank.idbank;
+                                        _selectedAccountDest = null;
+                                        idaccountcontrollerDest = '';
+                                      });
+                                      setState(() {
+                                        _selectedBankDest = bank;
+                                        idbankcontrollerDest = bank.idbank;
+                                        _selectedAccountDest = null;
+                                        idaccountcontrollerDest = '';
+                                      });
+                                      await fetchAccountsDestData();
+
+                                      // Auto-select first destination account
+                                      if (_accountsDest.isNotEmpty) {
+                                        final firstAccount = _accountsDest.first;
+                                        setModalState(() {
+                                          _selectedAccountDest = firstAccount;
+                                          idaccountcontrollerDest = firstAccount.idaccount;
+                                        });
+                                        setState(() {
+                                          _selectedAccountDest = firstAccount;
+                                          idaccountcontrollerDest = firstAccount.idaccount;
+                                        });
+                                      }
+
+                                      setModalState(() {});
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                _buildModernDropdown<Account>(
+                                  label: "Destination Account",
+                                  value: _selectedAccountDest,
+                                  items: _accountsDest,
+                                  itemBuilder: (account) => Text(account.nameaccount),
+                                  onChanged: (account) {
+                                    if (account != null) {
+                                      setModalState(() {
+                                        _selectedAccountDest = account;
+                                        idaccountcontrollerDest = account.idaccount;
+                                      });
+                                      setState(() {
+                                        _selectedAccountDest = account;
+                                        idaccountcontrollerDest = account.idaccount;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bottom buttons
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      if (idedit.isNotEmpty) ...[
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: Colors.grey[300]!, width: 1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              _clearForm();
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              "Cancel",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: idedit.isEmpty
+                                  ? [Colors.teal[600]!, Colors.teal[800]!]
+                                  : [Colors.orange[600]!, Colors.orange[800]!],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (idedit.isEmpty ? Colors.teal : Colors.orange).withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () async {
+                              if (idedit.isEmpty) {
+                                await _addTransaction();
+                              } else {
+                                await _updateTransaction();
+                              }
+                              Navigator.pop(context);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  idedit.isEmpty ? Icons.add_circle_outline : Icons.check_circle_outline,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  idedit.isEmpty ? "Add Transaction" : "Update Transaction",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTypeChip(String type, IconData icon, MaterialColor color, StateSetter setModalState) {
+    final isSelected = _selectedType == type;
+    return GestureDetector(
+      onTap: () {
+        setModalState(() => _selectedType = type);
+        setState(() => _selectedType = type);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [color[50]!, color[100]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? color[300]! : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? color[700] : Colors.grey[600],
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              type,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? color[800] : Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: Colors.grey[500],
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIcon: Icon(icon, color: Colors.teal[600], size: 20),
+        filled: true,
+        fillColor: readOnly ? Colors.grey[100] : Colors.grey[50],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.teal[400]!, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
+  Widget _buildModernDropdown<T>({
+    required String label,
+    required T? value,
+    required List<T> items,
+    required Widget Function(T) itemBuilder,
+    required void Function(T?) onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: Colors.grey[500],
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.teal[400]!, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      items: items.map((item) => DropdownMenuItem<T>(
+        value: item,
+        child: itemBuilder(item),
+      )).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  /// ---------- Add/Update Methods ----------
   Future<void> _addTransaction() async {
-    final idtransaction = asInt(idcontroller);
+    final values = await getNextId();
+    final idtransaction = values["maxId"];
     final idamount = asDouble(amountcontroller.text);
     if (idamount == 0.0) return;
 
     final dateTime = DateTime.now();
 
-    if (_selectedType != "TRANSFERENCIA") {
-      // 🔹 Caso normal (DEPÓSITO o RETIRO)
+    if (_selectedType != "Transfer") {
+      // Normal case (DEPOSIT or WITHDRAWAL)
       final insertMap = {
         "amount": idamount,
         "date": dateTime,
@@ -488,16 +996,16 @@ class _TransactionsState extends State<Transactions> {
       );
       toastification.show(
         context: context,
-        title: const Text("Transacción agregada"),
+        title: const Text("Transaction added successfully!"),
         type: ToastificationType.success,
         autoCloseDuration: const Duration(seconds: 2),
       );
     } else {
-      // 🔹 Caso TRANSFERENCIA → 2 registros pero mismo summary global
+      // TRANSFER case → 2 records
       if (idaccountcontrollerDest.isEmpty) {
         toastification.show(
           context: context,
-          title: const Text('Selecciona la cuenta destino'),
+          title: const Text('Please select destination account'),
           autoCloseDuration: const Duration(seconds: 3),
           style: ToastificationStyle.flat,
           type: ToastificationType.error,
@@ -508,28 +1016,24 @@ class _TransactionsState extends State<Transactions> {
       final currentSummary = totSummary;
 
       final withdrawalMap = {
-        "amount": idamount, // se inserta como negativo
+        "amount": idamount,
         "date": dateTime,
         "details": detailscontroller.text.toUpperCase(),
         "idtransaction": idtransaction,
         "idaccount": asInt(idaccountcontroller),
         "idbank": asInt(idbankcontroller),
-        "summary":
-            currentSummary +
-            idamount, // 👈 a lo que habia se le suma pero como es - se refleja una disminución
+        "summary": currentSummary + idamount,
         "type": "WITHDRAWAL",
       };
 
-      // Registro de depósito
-      //     -500
       final depositMap = {
-        "amount": idamount * (-1), // se convierte a positivo
+        "amount": idamount * (-1),
         "date": dateTime,
         "details": detailscontroller.text.toUpperCase(),
         "idtransaction": idtransaction + 1,
         "idaccount": asInt(idaccountcontrollerDest),
         "idbank": asInt(idbankcontrollerDest),
-        "summary": currentSummary, // 👈 vuelve al estado anterior
+        "summary": currentSummary,
         "type": "DEPOSIT",
       };
 
@@ -540,6 +1044,12 @@ class _TransactionsState extends State<Transactions> {
       await DatabaseMethods().addTransactionDetails(
         depositMap,
         depositMap["idtransaction"].toString(),
+      );
+      toastification.show(
+        context: context,
+        title: const Text("Transfer completed successfully!"),
+        type: ToastificationType.success,
+        autoCloseDuration: const Duration(seconds: 2),
       );
     }
 
@@ -557,7 +1067,7 @@ class _TransactionsState extends State<Transactions> {
       "idaccount": idaccount,
       "idbank": idbank,
       "details": (detailscontroller.text).toUpperCase(),
-      "type": _selectedType,
+      "type": mapTypeToDB(_selectedType),
     };
 
     await DatabaseMethods().updateTransactionDetails(
@@ -566,7 +1076,7 @@ class _TransactionsState extends State<Transactions> {
     );
     toastification.show(
       context: context,
-      title: const Text("Transacción actualizada"),
+      title: const Text("Transaction updated successfully!"),
       type: ToastificationType.info,
       autoCloseDuration: const Duration(seconds: 2),
     );
@@ -577,44 +1087,50 @@ class _TransactionsState extends State<Transactions> {
 
   void _clearForm() {
     idcontroller = '';
-    amountcontroller.text = '0.0';
-    detailscontroller.clear();
+    idedit = '';
     amountcontroller.clear();
+    detailscontroller.clear();
     summarycontroller.clear();
     datecontroller.clear();
+    _selectedType = 'Deposit';
+    _selectedBank = null;
+    _selectedAccount = null;
+    _selectedBankDest = null;
+    _selectedAccountDest = null;
+    idbankcontroller = '';
+    idaccountcontroller = '';
+    idbankcontrollerDest = '';
+    idaccountcontrollerDest = '';
   }
 
   Future<void> _afterWriteRefresh() async {
-    final values = await getNextId();
-    idcontroller = values["maxId"].toString();
     await getTotal();
     await fetchBanksData();
-    await fetchAccountsData();
+    await fetchallBanksData();
+    await fetchallAccountsData();
     if (mounted) setState(() {});
   }
 
   Future<Map> getNextId() async {
     try {
-      final q =
-          await FirebaseFirestore.instance
-              .collection("Transactions")
-              .orderBy("idtransaction", descending: true)
-              .limit(1)
-              .get();
+      final q = await FirebaseFirestore.instance
+          .collection("Transactions")
+          .orderBy("idtransaction", descending: true)
+          .limit(1)
+          .get();
       int maxId = 0;
       if (q.docs.isNotEmpty) {
         maxId = asInt(q.docs.first.data()["idtransaction"]);
       }
       return {"maxId": maxId + 1};
     } catch (_) {
-      return {"maxId": 0};
+      return {"maxId": 1};
     }
   }
 
   Future<void> getTotal() async {
     double suma = 0.0;
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('Transactions').get();
+    final querySnapshot = await FirebaseFirestore.instance.collection('Transactions').get();
     for (var doc in querySnapshot.docs) {
       suma += asDouble(doc.data()['amount']);
     }
@@ -626,11 +1142,10 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> fetchBanksData() async {
-    final querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('Banks')
-            .orderBy("namebank", descending: false)
-            .get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Banks')
+        .orderBy("namebank", descending: false)
+        .get();
     final banksList = <Bank>[];
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
@@ -651,11 +1166,10 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> fetchallBanksData() async {
-    final querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('Banks')
-            .orderBy("namebank", descending: false)
-            .get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Banks')
+        .orderBy("namebank", descending: false)
+        .get();
     final allbanksList = <AllBank>[];
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
@@ -674,11 +1188,10 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> fetchAccountsData() async {
-    final accountsSnapshot =
-        await FirebaseFirestore.instance
-            .collection('Accounts')
-            .orderBy("nameaccount", descending: false)
-            .get();
+    final accountsSnapshot = await FirebaseFirestore.instance
+        .collection('Accounts')
+        .orderBy("nameaccount", descending: false)
+        .get();
 
     final accountsList = <Account>[];
     for (var doc in accountsSnapshot.docs) {
@@ -701,11 +1214,10 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> fetchallAccountsData() async {
-    final allaccountsSnapshot =
-        await FirebaseFirestore.instance
-            .collection('Accounts')
-            .orderBy("nameaccount", descending: false)
-            .get();
+    final allaccountsSnapshot = await FirebaseFirestore.instance
+        .collection('Accounts')
+        .orderBy("nameaccount", descending: false)
+        .get();
     final allaccountsList = <AllAccount>[];
     for (var doc in allaccountsSnapshot.docs) {
       final data = doc.data();
@@ -724,11 +1236,10 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> fetchAccountsDestData() async {
-    final accountsSnapshot =
-        await FirebaseFirestore.instance
-            .collection('Accounts')
-            .orderBy("nameaccount", descending: false)
-            .get();
+    final accountsSnapshot = await FirebaseFirestore.instance
+        .collection('Accounts')
+        .orderBy("nameaccount", descending: false)
+        .get();
 
     final accountsList = <Account>[];
     for (var doc in accountsSnapshot.docs) {
@@ -761,7 +1272,7 @@ class _TransactionsState extends State<Transactions> {
     });
   }
 
-  /// ---------- Listado ----------
+  /// ---------- List ----------
   Widget _allTransactionsDetails() {
     if (transactionsStream == null) {
       return const Center(child: CircularProgressIndicator());
@@ -776,89 +1287,202 @@ class _TransactionsState extends State<Transactions> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty) return const Center(child: Text("No transactions"));
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "No transactions yet",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Tap the button below to add one",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: docs.length,
           itemBuilder: (context, index) {
             final ds = docs[index];
             final dt = asDateTime(ds.data()["date"]);
-            final formattedDate =
-                dt == null
-                    ? "Unknown date"
-                    : DateFormat('yyyy-MM-dd hh:mm a').format(dt);
+            final formattedDate = dt == null
+                ? "Unknown date"
+                : DateFormat('MMM dd, yyyy • hh:mm a').format(dt);
             final details = (ds.data()["details"] ?? '').toString();
             final type = (ds.data()["type"] ?? '').toString();
             final amount = asDouble(ds.data()["amount"]);
             final summary = asDouble(ds.data()["summary"]);
             final idbank = (ds.data()["idbank"]).toString();
             final idaccount = (ds.data()["idaccount"]).toString();
-            final bankName =
-                _allbanks
+            final bankName = _allbanks
                     .firstWhereOrNull((b) => b.allidbank == idbank)
                     ?.allnamebank ??
-                'UNKNOWN';
-            final accountName =
-                _allaccounts
+                'Unknown Bank';
+            final accountName = _allaccounts
                     .firstWhereOrNull((a) => a.allidaccount == idaccount)
                     ?.allnameaccount ??
-                'UNKNOWN';
+                'Unknown Account';
 
-            return Column(
-              children: [
-                Material(
-                  elevation: 5.0,
-                  borderRadius: BorderRadius.circular(3),
-                  color: Colors.white,
-                  child: ListTile(
-                    onTap: () {
-                      _confirmUpdate(ds.id);
-                    },
-                    title: Text(
-                      details.toUpperCase(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            MaterialColor typeColor;
+            IconData typeIcon;
+            if (type == "DEPOSIT") {
+              typeColor = Colors.green;
+              typeIcon = Icons.arrow_downward;
+            } else if (type == "WITHDRAWAL") {
+              typeColor = Colors.red;
+              typeIcon = Icons.arrow_upward;
+            } else {
+              typeColor = Colors.blue;
+              typeIcon = Icons.swap_horiz;
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey[200]!, width: 1),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _showTransactionModal(editId: ds.id),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Text(
-                          "Amount: ${formatAmountNum(amount)}",
-                          style: TextStyle(
-                            color:
-                                type == "DEPOSIT" ? Colors.green : Colors.red,
-                            fontSize: 12,
+                        // Type icon
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [typeColor[50]!, typeColor[100]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: typeColor[200]!, width: 1),
+                          ),
+                          child: Icon(typeIcon, color: typeColor[700], size: 24),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                details,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                  letterSpacing: -0.2,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "$bankName • $accountName",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Text("Summary: ${formatAmountNum(summary)}"),
-                        Text(
-                          "$bankName | $accountName",
-                          style: const TextStyle(
-                            color: Color.fromARGB(255, 43, 42, 42),
-                            fontSize: 10,
-                          ),
+
+                        // Amount
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              formatAmountNum(amount),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: typeColor[700],
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                formatAmountNum(summary),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          formattedDate,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 10,
+
+                        const SizedBox(width: 8),
+
+                        // Delete button
+                        InkWell(
+                          onTap: () => _confirmDelete(ds.data()["idtransaction"].toString()),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(Icons.delete_outline, size: 22, color: Colors.red[600]),
                           ),
                         ),
                       ],
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed:
-                          () => _confirmDelete(
-                            ds.data()["idtransaction"].toString(),
-                          ),
-                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-              ],
+              ),
             );
           },
         );
@@ -867,26 +1491,24 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> _confirmDelete(String idTransaction) async {
-    final ok =
-        await showDialog<bool>(
+    final ok = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text("Confirmar Eliminación"),
-                content: const Text(
-                  "¿Estás seguro de que quieres eliminar esta transacción?",
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text("Cancelar"),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text("Eliminar"),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: const Text("Confirm Delete"),
+            content: const Text(
+              "Are you sure you want to delete this transaction?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
               ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Delete"),
+              ),
+            ],
+          ),
         ) ??
         false;
 
@@ -895,41 +1517,12 @@ class _TransactionsState extends State<Transactions> {
     await DatabaseMethods().deleteTransactionDetails(idTransaction);
     toastification.show(
       context: context,
-      title: const Text("Transacción eliminada"),
+      title: const Text("Transaction deleted successfully"),
       type: ToastificationType.error,
       autoCloseDuration: const Duration(seconds: 2),
     );
     _clearForm();
     await _afterWriteRefresh();
-  }
-
-  Future<void> _confirmUpdate(String docId) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text("Confirm Update!"),
-                content: const Text(
-                  "Are you sure you want to update this transaction?",
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text("Cancel"),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text("Update"),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-
-    if (ok) {
-      await _loadTransactionForEdit(docId);
-    }
   }
 
   Future<void> _loadTransactionForEdit(String docId) async {
@@ -946,14 +1539,14 @@ class _TransactionsState extends State<Transactions> {
       detailscontroller.text = (data["details"] ?? '').toString();
       amountcontroller.text = asDouble(data["amount"]).toString();
       summarycontroller.text = asDouble(data["summary"]).toString();
-      _selectedType = mapType((data["type"] ?? 'DEPÓSITO').toString());
+      _selectedType = mapType((data["type"] ?? 'DEPOSIT').toString());
 
       // IDs
       idbankcontroller = (data["idbank"]).toString();
       idaccountcontroller = (data["idaccount"]).toString();
     });
 
-    // 🔹 Buscar banco en lista y setearlo
+    // Find bank and set it
     final bank = _banks.firstWhereOrNull((b) => b.idbank == idbankcontroller);
     if (bank != null) {
       setState(() {
@@ -961,7 +1554,7 @@ class _TransactionsState extends State<Transactions> {
       });
     }
 
-    // 🔹 Recargar cuentas del banco seleccionado y setear cuenta
+    // Reload accounts and set account
     await fetchAccountsData();
     final account = _accounts.firstWhereOrNull(
       (a) => a.idaccount == idaccountcontroller,
@@ -972,5 +1565,4 @@ class _TransactionsState extends State<Transactions> {
       });
     }
   }
-
 }
