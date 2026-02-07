@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:mywallet/service/appcache.dart';
 import 'package:mywallet/service/database.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Accounts extends StatefulWidget {
   const Accounts({super.key});
@@ -67,11 +68,33 @@ class _AccountsState extends State<Accounts> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Imagen del banco
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: bankImage.isNotEmpty ? NetworkImage(bankImage) : null,
-                child: bankImage.isEmpty ? const Icon(Icons.account_balance) : null,
-              ),
+              bankImage.isNotEmpty
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: bankImage,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 40,
+                          height: 40,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.grey[300],
+                          child: const Icon(Icons.account_balance, size: 20),
+                        ),
+                      ),
+                    )
+                  : CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[300],
+                      child: const Icon(Icons.account_balance),
+                    ),
               const SizedBox(width: 10),
               // Info
               Expanded(

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image/cached_network_image.dart';
 
 class UploadImageWidget extends StatefulWidget {
   final void Function(String imageUrl) onUploaded;
@@ -124,12 +125,20 @@ class _UploadImageWidgetState extends State<UploadImageWidget> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    uploadedImageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: uploadedImageUrl!,
                     height: 100,
                     width: 100,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
+                    placeholder: (context, url) => Container(
+                      height: 100,
+                      width: 100,
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(
                       Icons.error,
                       color: Colors.red,
                       size: 50,

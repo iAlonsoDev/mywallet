@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mywallet/service/appcache.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Details extends StatefulWidget {
   const Details({super.key});
@@ -55,18 +56,45 @@ class _DetailsState extends State<Details> {
                     elevation: 2,
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: ListTile(
-                      leading: CircleAvatar(
-                        radius: 20,
-                        backgroundImage: bankImage.isNotEmpty ? NetworkImage(bankImage) : null,
-                        backgroundColor: bankImage.isEmpty ? (accountAmount < 0 ? Colors.redAccent : Colors.green) : null,
-                        child: bankImage.isEmpty ? Text(
-                          bankName.isNotEmpty ? bankName[0].toUpperCase() : "?",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ) : null,
-                      ),
+                      leading: bankImage.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: bankImage,
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  width: 40,
+                                  height: 40,
+                                  color: Colors.grey[300],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: accountAmount < 0 ? Colors.redAccent : Colors.green,
+                                  child: Text(
+                                    bankName.isNotEmpty ? bankName[0].toUpperCase() : "?",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : CircleAvatar(
+                              radius: 20,
+                              backgroundColor: accountAmount < 0 ? Colors.redAccent : Colors.green,
+                              child: Text(
+                                bankName.isNotEmpty ? bankName[0].toUpperCase() : "?",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
                       title: Text(
                         accountName,
                         style: const TextStyle(
