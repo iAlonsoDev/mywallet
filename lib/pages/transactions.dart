@@ -187,70 +187,104 @@ class _TransactionsState extends State<Transactions> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header moderno
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [const Color.fromARGB(255, 74, 111, 190), const Color.fromARGB(255, 29, 86, 109)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
+            const SizedBox(height: 36),
+
+            // Clean Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Transaction Management",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            Text(
-                              "Track your finances",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Balance Card
                   Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF3B82F6),
+                          const Color(0xFF2563EB),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: const Color(0xFF3B82F6).withValues(alpha: 0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
+                        BoxShadow(
+                          color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 26),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Transaction Management",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.grey[900],
+                            letterSpacing: -0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Track your finances",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Clean Balance Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 25,
+                      offset: const Offset(0, 6),
+                      spreadRadius: -3,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 15,
+                      offset: const Offset(0, 3),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                      blurRadius: 35,
+                      offset: const Offset(0, 10),
+                      spreadRadius: -8,
+                    ),
+                  ],
+                ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -270,53 +304,70 @@ class _TransactionsState extends State<Transactions> {
                               formatAmountNum(totSummary),
                               style: TextStyle(
                                 fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: totSummary >= 0 ? Colors.green[700] : Colors.red[700],
-                                letterSpacing: -1,
+                                fontWeight: FontWeight.w900,
+                                color: totSummary >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                letterSpacing: -1.5,
+                                height: 1.2,
                               ),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: totSummary >= 0
-                                  ? [Colors.green[50]!, Colors.green[100]!]
-                                  : [Colors.red[50]!, Colors.red[100]!],
+                                  ? [const Color(0xFF10B981), const Color(0xFF059669)]
+                                  : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (totSummary >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444))
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
                           child: Icon(
-                            totSummary >= 0 ? Icons.trending_up : Icons.trending_down,
-                            color: totSummary >= 0 ? Colors.green[700] : Colors.red[700],
+                            totSummary >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                            color: Colors.white,
                             size: 20,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // List header
+            // Premium List Header
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Container(
-                    width: 4,
-                    height: 24,
+                    width: 6,
+                    height: 28,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.orange[400]!, Colors.orange[600]!],
+                        colors: [
+                          const Color(0xFFF59E0B),
+                          const Color(0xFFD97706),
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -324,7 +375,7 @@ class _TransactionsState extends State<Transactions> {
                     "Recent Transactions",
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: Colors.grey[900],
                       letterSpacing: -0.5,
                     ),
@@ -338,19 +389,11 @@ class _TransactionsState extends State<Transactions> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.small(
         onPressed: () => _showTransactionModal(),
-        backgroundColor: const Color.fromARGB(255, 72, 123, 143),
+        backgroundColor: const Color(0xFF3B82F6),
         elevation: 4,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          "New Transaction",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
       ),
     );
   }
@@ -430,7 +473,7 @@ class _TransactionsState extends State<Transactions> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              idedit.isEmpty ? "New Transaction" : "Edit Transaction",
+                              idedit.isEmpty ? "New" : "Edit",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
@@ -460,7 +503,7 @@ class _TransactionsState extends State<Transactions> {
                 // Form
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -504,7 +547,7 @@ class _TransactionsState extends State<Transactions> {
                           },
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Account dropdown
                         _buildModernDropdown<Account>(
@@ -526,7 +569,7 @@ class _TransactionsState extends State<Transactions> {
                           },
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Details
                         _buildModernTextField(
@@ -535,7 +578,7 @@ class _TransactionsState extends State<Transactions> {
                           icon: Icons.description_outlined,
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Amount and Summary
                         Row(
@@ -544,7 +587,7 @@ class _TransactionsState extends State<Transactions> {
                               child: TextField(
                                 controller: amountcontroller,
                                 keyboardType: TextInputType.number,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                 decoration: InputDecoration(
                                   labelText: "Amount",
                                   labelStyle: TextStyle(
@@ -597,7 +640,7 @@ class _TransactionsState extends State<Transactions> {
                           ],
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         // Type selector
                         Text(
@@ -642,9 +685,9 @@ class _TransactionsState extends State<Transactions> {
 
                         // Transfer destination (only if Transfer)
                         if (_selectedType == "Transfer") ...[
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
                               borderRadius: BorderRadius.circular(12),
@@ -667,7 +710,7 @@ class _TransactionsState extends State<Transactions> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 12),
                                 _buildModernDropdown<Bank>(
                                   label: "Destination Bank",
                                   value: _selectedBankDest,
@@ -780,17 +823,34 @@ class _TransactionsState extends State<Transactions> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: idedit.isEmpty
-                                  ? [Colors.teal[600]!, Colors.teal[800]!]
-                                  : [Colors.orange[600]!, Colors.orange[800]!],
+                                  ? [
+                                      const Color.fromARGB(255, 74, 111, 190),
+                                      const Color.fromARGB(255, 29, 86, 109),
+                                    ]
+                                  : [
+                                      const Color(0xFF14B8A6),
+                                      const Color(0xFF0D9488),
+                                    ],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: (idedit.isEmpty ? Colors.teal : Colors.orange).withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
+                                color: (idedit.isEmpty
+                                        ? const Color.fromARGB(255, 74, 111, 190)
+                                        : const Color(0xFF14B8A6))
+                                    .withValues(alpha: 0.5),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: (idedit.isEmpty
+                                        ? const Color.fromARGB(255, 74, 111, 190)
+                                        : const Color(0xFF14B8A6))
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -798,11 +858,11 @@ class _TransactionsState extends State<Transactions> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
                               elevation: 0,
                               shadowColor: Colors.transparent,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
                             onPressed: () async {
@@ -817,15 +877,16 @@ class _TransactionsState extends State<Transactions> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  idedit.isEmpty ? Icons.add_circle_outline : Icons.check_circle_outline,
-                                  size: 20,
+                                  idedit.isEmpty ? Icons.add_circle_rounded : Icons.check_circle_rounded,
+                                  size: 18,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  idedit.isEmpty ? "Add Transaction" : "Update Transaction",
+                                  idedit.isEmpty ? "Add" : "Update",
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ],
@@ -852,36 +913,49 @@ class _TransactionsState extends State<Transactions> {
         setState(() => _selectedType = type);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: [color[50]!, color[100]!],
+                  colors: [
+                    color[50]!.withValues(alpha: 0.8),
+                    color[100]!.withValues(alpha: 0.4),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: isSelected ? null : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? null : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? color[300]! : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? color[300]!.withValues(alpha: 0.6) : Colors.grey[300]!,
+            width: isSelected ? 2 : 1.5,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color[400]!.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           children: [
             Icon(
               icon,
               color: isSelected ? color[700] : Colors.grey[600],
-              size: 24,
+              size: 28,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               type,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? color[800] : Colors.grey[700],
+                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -901,30 +975,41 @@ class _TransactionsState extends State<Transactions> {
       controller: controller,
       keyboardType: keyboardType,
       readOnly: readOnly,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
           color: Colors.grey[500],
           fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
-        prefixIcon: Icon(icon, color: Colors.teal[600], size: 20),
+        prefixIcon: Icon(icon, color: const Color.fromARGB(255, 74, 111, 190), size: 20),
         filled: true,
-        fillColor: readOnly ? Colors.grey[100] : Colors.grey[50],
+        fillColor: readOnly ? Colors.grey[100] : const Color(0xFFF8FAFC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Colors.grey[300]!,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.teal[400]!, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color.fromARGB(255, 74, 111, 190),
+            width: 2,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
     );
   }
@@ -938,28 +1023,41 @@ class _TransactionsState extends State<Transactions> {
   }) {
     return DropdownButtonFormField<T>(
       initialValue: value,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        letterSpacing: -0.2,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
           color: Colors.grey[500],
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: const Color(0xFFF8FAFC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Colors.grey[300]!,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.teal[400]!, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color.fromARGB(255, 74, 111, 190),
+            width: 2,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
       items: items.map((item) => DropdownMenuItem<T>(
         value: item,
@@ -1289,35 +1387,64 @@ class _TransactionsState extends State<Transactions> {
         final docs = snapshot.data!.docs;
         if (docs.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
+            child: Padding(
+              padding: const EdgeInsets.all(36),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(26),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.1),
+                          const Color.fromARGB(255, 29, 86, 109).withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.2),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.15),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.receipt_long_rounded,
+                      size: 36,
+                      color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.6),
+                    ),
                   ),
-                  child: Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "No transactions yet",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
+                  const SizedBox(height: 12),
+                  Text(
+                    "No transactions yet",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey[800],
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Tap the button below to add one",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[500],
+                  const SizedBox(height: 10),
+                  Text(
+                    "Tap the button below to add your first transaction",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }
@@ -1363,40 +1490,62 @@ class _TransactionsState extends State<Transactions> {
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: typeColor[200]!.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -2,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
+                  BoxShadow(
+                    color: typeColor[400]!.withValues(alpha: 0.12),
+                    blurRadius: 30,
+                    offset: const Offset(0, 8),
+                    spreadRadius: -5,
+                  ),
                 ],
-                border: Border.all(color: Colors.grey[200]!, width: 1),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
                   onTap: () => _showTransactionModal(editId: ds.id),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     child: Row(
                       children: [
-                        // Type icon
+                        // Premium Type Icon with gradient and glow
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [typeColor[50]!, typeColor[100]!],
+                              colors: [typeColor[400]!, typeColor[600]!],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: typeColor[200]!, width: 1),
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: typeColor[400]!.withValues(alpha: 0.4),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
                           ),
-                          child: Icon(typeIcon, color: typeColor[700], size: 24),
+                          child: Icon(typeIcon, color: Colors.white, size: 24),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 10),
 
                         // Details
                         Expanded(
@@ -1406,76 +1555,118 @@ class _TransactionsState extends State<Transactions> {
                               Text(
                                 details,
                                 style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                  letterSpacing: -0.2,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "$bankName • $accountName",
-                                style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black87,
+                                  letterSpacing: -0.3,
                                 ),
                                 overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                formattedDate,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[500],
-                                ),
+                              Row(
+                                children: [
+                                  Icon(Icons.account_balance_rounded, size: 12, color: Colors.grey[500]),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      "$bankName • $accountName",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time_rounded, size: 11, color: Colors.grey[500]),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      formattedDate,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[500],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
 
-                        // Amount
+                        // Amount and Summary
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
                               formatAmountNum(amount),
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
                                 color: typeColor[700],
-                                letterSpacing: -0.3,
+                                letterSpacing: -0.5,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(6),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    typeColor[50]!.withValues(alpha: 0.8),
+                                    typeColor[100]!.withValues(alpha: 0.4),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: typeColor[200]!.withValues(alpha: 0.5),
+                                  width: 1,
+                                ),
                               ),
                               child: Text(
                                 formatAmountNum(summary),
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w800,
+                                  color: typeColor[700],
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
 
-                        // Delete button
+                        // Premium Delete button
                         InkWell(
                           onTap: () => _confirmDelete(ds.data()["idtransaction"].toString()),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(Icons.delete_outline, size: 22, color: Colors.red[600]),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFFEF4444).withValues(alpha: 0.15),
+                                  const Color(0xFFDC2626).withValues(alpha: 0.08),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Icon(Icons.delete_rounded, size: 20, color: const Color(0xFFEF4444)),
                           ),
                         ),
                       ],
