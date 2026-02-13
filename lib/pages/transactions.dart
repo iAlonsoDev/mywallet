@@ -1121,7 +1121,7 @@ class _TransactionsState extends State<Transactions> {
         "idaccount": asInt(idaccountcontroller),
         "idbank": asInt(idbankcontroller),
         "summary": currentSummary + idamount,
-        "type": "WITHDRAWAL",
+        "type": mapTypeToDB(_selectedType),
       };
 
       final depositMap = {
@@ -1132,7 +1132,7 @@ class _TransactionsState extends State<Transactions> {
         "idaccount": asInt(idaccountcontrollerDest),
         "idbank": asInt(idbankcontrollerDest),
         "summary": currentSummary,
-        "type": "DEPOSIT",
+        "type": mapTypeToDB(_selectedType),
       };
 
       await DatabaseMethods().addTransactionDetails(
