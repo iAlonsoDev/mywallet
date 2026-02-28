@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mywallet/service/appcache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -17,6 +18,7 @@ class _DetailsState extends State<Details> {
   void initState() {
     super.initState();
     _loadData();
+    initializeDateFormatting('es_ES');
   }
 
   Future<void> _loadData() async {
@@ -371,41 +373,49 @@ class _DetailsState extends State<Details> {
                                     : 0.0;
                                 final isPositive = accountAmount >= 0;
 
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: isPositive
-                                          ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                                          : const Color(0xFFEF4444).withValues(alpha: 0.2),
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 4),
-                                        spreadRadius: -2,
-                                      ),
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.04),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                      BoxShadow(
-                                        color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                            .withValues(alpha: 0.12),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 8),
-                                        spreadRadius: -5,
-                                      ),
-                                    ],
+                                final accountId = account['accountId'] as String;
+
+                                return GestureDetector(
+                                  onTap: () => _showAccountTransactionsBottomSheet(
+                                    context,
+                                    accountName,
+                                    accountId,
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: isPositive
+                                            ? const Color(0xFF10B981).withValues(alpha: 0.2)
+                                            : const Color(0xFFEF4444).withValues(alpha: 0.2),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.08),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 4),
+                                          spreadRadius: -2,
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.04),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        BoxShadow(
+                                          color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
+                                              .withValues(alpha: 0.12),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 8),
+                                          spreadRadius: -5,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
                                       children: [
                                         Row(
                                           children: [
@@ -593,8 +603,9 @@ class _DetailsState extends State<Details> {
                                       ],
                                     ),
                                   ),
-                                );
-                              }).toList(),
+                                ),
+                              );
+                            }).toList(),
                             ),
                           ),
                         const SizedBox(height: 16),
@@ -767,6 +778,7 @@ class _DetailsState extends State<Details> {
             'nameBank': bankName,
             'bankImage': cache.getBankImage(bankId),
             'totalAmount': entry.value,
+            'accountId': entry.key,
           };
         })
         .toList();
@@ -777,5 +789,295 @@ class _DetailsState extends State<Details> {
     );
 
     return accountsData;
+  }
+
+  List<Map<String, dynamic>> _getTransactionsForAccount(String accountId) {
+    final now = DateTime.now();
+    final transactions = cache.transactions
+        .where((tx) {
+          final txDate = tx['date'] as DateTime;
+          final idAccount = tx['idaccount']?.toString() ?? '';
+
+          // Filter by account id
+          if (idAccount != accountId) return false;
+
+          // Filter by current month
+          if (txDate.year != now.year || txDate.month != now.month) return false;
+
+          // Validate active transaction
+          final accountStatus = cache.getAccountStatus(idAccount);
+          final bankStatus = cache.getBankStatus(tx['idbank']?.toString() ?? '');
+          return accountStatus == "1" && bankStatus == "1";
+        })
+        .toList();
+
+    // Sort by date descending (most recent first)
+    transactions.sort((a, b) {
+      final dateA = a['date'] as DateTime;
+      final dateB = b['date'] as DateTime;
+      return dateB.compareTo(dateA);
+    });
+
+    return transactions;
+  }
+
+  void _showAccountTransactionsBottomSheet(
+    BuildContext context,
+    String accountName,
+    String accountId,
+  ) {
+    final transactions = _getTransactionsForAccount(accountId);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildTransactionsBottomSheet(
+        accountName,
+        transactions,
+      ),
+    );
+  }
+
+  Widget _buildTransactionsBottomSheet(
+    String accountName,
+    List<Map<String, dynamic>> transactions,
+  ) {
+    final now = DateTime.now();
+    final monthName = DateFormat('MMMM', 'es_ES').format(now);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(28),
+                topRight: Radius.circular(28),
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        accountName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                          letterSpacing: -0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${monthName[0].toUpperCase()}${monthName.substring(1)} ${now.year}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                  color: Colors.grey[600],
+                  tooltip: 'Cerrar',
+                ),
+              ],
+            ),
+          ),
+          // Transactions List or Empty State
+          if (transactions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 48,
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Sin transacciones',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No hay transacciones en esta cuenta para este mes',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                itemCount: transactions.length,
+                itemBuilder: (context, index) {
+                  final tx = transactions[index];
+                  final txDate = tx['date'] as DateTime;
+                  final amount = (tx['amount'] ?? 0.0) is num
+                      ? (tx['amount'] as num).toDouble()
+                      : 0.0;
+                  final isPositive = amount >= 0;
+                  final type = tx['type']?.toString() ?? 'UNKNOWN';
+                  final details = tx['details']?.toString() ?? 'Sin descripción';
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.grey[200]!,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Type icon
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: type == 'TRANSFER'
+                                ? const Color(0xFF3B82F6).withValues(alpha: 0.1)
+                                : isPositive
+                                    ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                    : const Color(0xFFEF4444).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            type == 'DEPOSIT'
+                                ? Icons.arrow_downward_rounded
+                                : type == 'WITHDRAWAL'
+                                    ? Icons.arrow_upward_rounded
+                                    : Icons.swap_horiz_rounded,
+                            color: type == 'TRANSFER'
+                                ? const Color(0xFF3B82F6)
+                                : isPositive
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Transaction info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Date and Details on same line
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      details,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: const Color.fromARGB(255, 39, 39, 39),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 11,
+                                    color: const Color.fromARGB(255, 117, 116, 116),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    DateFormat('dd-MM-yyyy', 'es_ES').format(txDate),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Amount
+                        Text(
+                          formatAmount(amount),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: isPositive
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

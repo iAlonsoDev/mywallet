@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude:*)",
+      "Bash(cat \"/c/Users/jonat/.vscode/extensions/anthropic.claude-code-2.1.51-win32-x64/package.json\" | python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['name','version','activationEvents','contributes'] if k in d}, indent=2\\)\\)\" 2>/dev/null)"
+    ]
+  }
+}

@@ -61,6 +61,7 @@ class AppCache {
         "amount": (data["amount"] ?? 0).toDouble(),
         "summary": (data["summary"] ?? 0).toDouble(),
         "details": (data["details"] ?? "").toString(),
+        "type": (data["type"] ?? "UNKNOWN").toString(),
         "date": (data["date"] as Timestamp?)?.toDate() ?? DateTime.now(),
       };
     }).toList();
