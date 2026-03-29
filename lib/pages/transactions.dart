@@ -126,6 +126,8 @@ class _TransactionsState extends State<Transactions> {
   final amountcontroller = TextEditingController();
   final summarycontroller = TextEditingController();
   final datecontroller = TextEditingController();
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // State
   String _selectedType = 'Deposit';
@@ -177,6 +179,7 @@ class _TransactionsState extends State<Transactions> {
     amountcontroller.dispose();
     summarycontroller.dispose();
     datecontroller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -383,6 +386,46 @@ class _TransactionsState extends State<Transactions> {
                 ],
               ),
             ),
+
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: "Search by description...",
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                  prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400], size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.close_rounded, color: Colors.grey[400], size: 18),
+                          onPressed: () => setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          }),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
 
             // Transactions list
             Expanded(child: _allTransactionsDetails()),
@@ -868,10 +911,22 @@ class _TransactionsState extends State<Transactions> {
                             onPressed: () async {
                               if (idedit.isEmpty) {
                                 await _addTransaction();
+                                _clearForm();
+                                if (_banks.isNotEmpty) {
+                                  final firstBank = _banks.first;
+                                  _selectedBank = firstBank;
+                                  idbankcontroller = firstBank.idbank;
+                                  await fetchAccountsData();
+                                  if (_accounts.isNotEmpty) {
+                                    _selectedAccount = _accounts.first;
+                                    idaccountcontroller = _accounts.first.idaccount;
+                                  }
+                                }
+                                setModalState(() {});
                               } else {
                                 await _updateTransaction();
+                                Navigator.pop(context);
                               }
-                              Navigator.pop(context);
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1022,6 +1077,7 @@ class _TransactionsState extends State<Transactions> {
     required void Function(T?) onChanged,
   }) {
     return DropdownButtonFormField<T>(
+      key: ValueKey(value),
       initialValue: value,
       style: const TextStyle(
         fontSize: 12,
@@ -1384,7 +1440,13 @@ class _TransactionsState extends State<Transactions> {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final docs = snapshot.data!.docs;
+        final query = _searchQuery.trim().toLowerCase();
+        final docs = query.isEmpty
+            ? snapshot.data!.docs
+            : snapshot.data!.docs.where((d) {
+                final details = (d.data()["details"] ?? '').toString().toLowerCase();
+                return details.contains(query);
+              }).toList();
         if (docs.isEmpty) {
           return Center(
             child: Padding(
