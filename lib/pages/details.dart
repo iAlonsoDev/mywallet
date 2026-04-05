@@ -767,7 +767,7 @@ class _DetailsState extends State<Details> {
 
     // Filter accounts with non-zero balance
     final accountsData = totalAmountsByAccount.entries
-        .where((entry) => entry.value.toStringAsFixed(2) != "0.00")
+        .where((entry) => double.parse(entry.value.toStringAsFixed(2)).abs() != 0.0)
         .map((entry) {
           final accountName = cache.getAccountName(entry.key);
           final bankId = accountToBankMap[entry.key] ?? '0';
