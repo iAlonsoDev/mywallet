@@ -65,6 +65,8 @@ class AppCache {
         "date": (data["date"] as Timestamp?)?.toDate() ?? DateTime.now(),
       };
     }).toList();
+    transactions.sort((a, b) =>
+        int.parse(b["idtransaction"]).compareTo(int.parse(a["idtransaction"])));
   }
 
   // ===== Helpers =====

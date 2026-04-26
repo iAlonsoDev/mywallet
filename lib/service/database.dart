@@ -70,7 +70,6 @@ class DatabaseMethods {
     return FirebaseFirestore.instance
         .collection("Transactions")
         .orderBy("idtransaction", descending: true)
-        .limit(50)
         .snapshots();
   }
 

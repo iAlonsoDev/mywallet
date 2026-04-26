@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
+import 'package:mywallet/service/appcache.dart';
 import 'package:mywallet/service/database.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
@@ -80,17 +81,6 @@ class Bank {
   });
 }
 
-class AllBank {
-  final String allidbank;
-  final String allnamebank;
-  final String allstatusbank;
-  AllBank({
-    required this.allidbank,
-    required this.allnamebank,
-    required this.allstatusbank,
-  });
-}
-
 class Account {
   final String idaccount;
   final String nameaccount;
@@ -99,17 +89,6 @@ class Account {
     required this.idaccount,
     required this.nameaccount,
     required this.statusaccount,
-  });
-}
-
-class AllAccount {
-  final String allidaccount;
-  final String allnameaccount;
-  final String allstatusaccount;
-  AllAccount({
-    required this.allidaccount,
-    required this.allnameaccount,
-    required this.allstatusaccount,
   });
 }
 
@@ -147,20 +126,15 @@ class _TransactionsState extends State<Transactions> {
   List<Bank> _banks = <Bank>[];
   Bank? _selectedBank;
 
-  List<AllBank> _allbanks = <AllBank>[];
-
   List<Account> _accounts = <Account>[];
   Account? _selectedAccount;
 
-  List<AllAccount> _allaccounts = <AllAccount>[];
-
-  // Streams
-  Stream<QuerySnapshot<Map<String, dynamic>>>? transactionsStream;
+  bool _isLoading = true;
 
   Future<void> getOnTheLoad() async {
-    transactionsStream = DatabaseMethods().getTransactionDetails() as Stream<QuerySnapshot<Map<String, dynamic>>>?;
-    if (mounted) setState(() {});
+    await AppCache().loadStaticData();
     await getTotal();
+    if (mounted) setState(() { _isLoading = false; });
   }
 
   @override
@@ -168,8 +142,6 @@ class _TransactionsState extends State<Transactions> {
     super.initState();
     getOnTheLoad();
     fetchBanksData();
-    fetchallBanksData();
-    fetchallAccountsData();
     amountcontroller.addListener(_handleAmountChange);
   }
 
@@ -910,19 +882,24 @@ class _TransactionsState extends State<Transactions> {
                             ),
                             onPressed: () async {
                               if (idedit.isEmpty) {
+                                final savedBankId = idbankcontroller;
+                                final savedAccountId = idaccountcontroller;
                                 await _addTransaction();
-                                _clearForm();
-                                if (_banks.isNotEmpty) {
-                                  final firstBank = _banks.first;
-                                  _selectedBank = firstBank;
-                                  idbankcontroller = firstBank.idbank;
-                                  await fetchAccountsData();
-                                  if (_accounts.isNotEmpty) {
-                                    _selectedAccount = _accounts.first;
-                                    idaccountcontroller = _accounts.first.idaccount;
-                                  }
-                                }
-                                setModalState(() {});
+                                // Restaurar banco y cuenta seleccionados antes de guardar
+                                final bank = _banks.firstWhereOrNull((b) => b.idbank == savedBankId);
+                                final account = _accounts.firstWhereOrNull((a) => a.idaccount == savedAccountId);
+                                setModalState(() {
+                                  _selectedBank = bank;
+                                  _selectedAccount = account;
+                                  if (bank != null) idbankcontroller = savedBankId;
+                                  if (account != null) idaccountcontroller = savedAccountId;
+                                });
+                                setState(() {
+                                  _selectedBank = bank;
+                                  _selectedAccount = account;
+                                  if (bank != null) idbankcontroller = savedBankId;
+                                  if (account != null) idaccountcontroller = savedAccountId;
+                                });
                               } else {
                                 await _updateTransaction();
                                 Navigator.pop(context);
@@ -1167,21 +1144,24 @@ class _TransactionsState extends State<Transactions> {
         return;
       }
 
+      final transferAmount = idamount.abs();
       final currentSummary = totSummary;
 
+      // 1. Primero: resta del origen (withdrawal, monto negativo)
       final withdrawalMap = {
-        "amount": idamount,
+        "amount": -transferAmount,
         "date": dateTime,
         "details": detailscontroller.text.toUpperCase(),
         "idtransaction": idtransaction,
         "idaccount": asInt(idaccountcontroller),
         "idbank": asInt(idbankcontroller),
-        "summary": currentSummary + idamount,
+        "summary": currentSummary - transferAmount,
         "type": mapTypeToDB(_selectedType),
       };
 
+      // 2. Luego: suma al destino (deposit, monto positivo)
       final depositMap = {
-        "amount": idamount * (-1),
+        "amount": transferAmount,
         "date": dateTime,
         "details": detailscontroller.text.toUpperCase(),
         "idtransaction": idtransaction + 1,
@@ -1258,10 +1238,9 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> _afterWriteRefresh() async {
+    await AppCache().loadStaticData();
     await getTotal();
     await fetchBanksData();
-    await fetchallBanksData();
-    await fetchallAccountsData();
     if (mounted) setState(() {});
   }
 
@@ -1283,11 +1262,8 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> getTotal() async {
-    double suma = 0.0;
-    final querySnapshot = await FirebaseFirestore.instance.collection('Transactions').get();
-    for (var doc in querySnapshot.docs) {
-      suma += asDouble(doc.data()['amount']);
-    }
+    final suma = AppCache().transactions.fold<double>(
+      0.0, (acc, t) => acc + (t['amount'] as double? ?? 0.0));
     if (!mounted) return;
     setState(() {
       totSummary = (suma * 100).round() / 100;
@@ -1319,28 +1295,6 @@ class _TransactionsState extends State<Transactions> {
     });
   }
 
-  Future<void> fetchallBanksData() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Banks')
-        .orderBy("namebank", descending: false)
-        .get();
-    final allbanksList = <AllBank>[];
-    for (var doc in querySnapshot.docs) {
-      final data = doc.data();
-      allbanksList.add(
-        AllBank(
-          allidbank: doc.id,
-          allnamebank: (data['namebank'] ?? '').toString(),
-          allstatusbank: (data['status'] ?? '0').toString(),
-        ),
-      );
-    }
-    if (!mounted) return;
-    setState(() {
-      _allbanks = allbanksList;
-    });
-  }
-
   Future<void> fetchAccountsData() async {
     final accountsSnapshot = await FirebaseFirestore.instance
         .collection('Accounts')
@@ -1364,28 +1318,6 @@ class _TransactionsState extends State<Transactions> {
     if (!mounted) return;
     setState(() {
       _accounts = accountsList;
-    });
-  }
-
-  Future<void> fetchallAccountsData() async {
-    final allaccountsSnapshot = await FirebaseFirestore.instance
-        .collection('Accounts')
-        .orderBy("nameaccount", descending: false)
-        .get();
-    final allaccountsList = <AllAccount>[];
-    for (var doc in allaccountsSnapshot.docs) {
-      final data = doc.data();
-      allaccountsList.add(
-        AllAccount(
-          allidaccount: data['idaccount'].toString(),
-          allnameaccount: (data['nameaccount'] ?? '').toString(),
-          allstatusaccount: (data['status'] ?? '0').toString(),
-        ),
-      );
-    }
-    if (!mounted) return;
-    setState(() {
-      _allaccounts = allaccountsList;
     });
   }
 
@@ -1428,112 +1360,100 @@ class _TransactionsState extends State<Transactions> {
 
   /// ---------- List ----------
   Widget _allTransactionsDetails() {
-    if (transactionsStream == null) {
+    if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: transactionsStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final query = _searchQuery.trim().toLowerCase();
-        final docs = query.isEmpty
-            ? snapshot.data!.docs
-            : snapshot.data!.docs.where((d) {
-                final details = (d.data()["details"] ?? '').toString().toLowerCase();
-                return details.contains(query);
-              }).toList();
-        if (docs.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(36),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(26),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.1),
-                          const Color.fromARGB(255, 29, 86, 109).withValues(alpha: 0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.2),
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.15),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.receipt_long_rounded,
-                      size: 36,
-                      color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "No transactions yet",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.grey[800],
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Tap the button below to add your first transaction",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+    final cache = AppCache();
+    final query = _searchQuery.trim().toLowerCase();
+    final allDocs = cache.transactions;
+    final docs = query.isEmpty
+        ? allDocs
+        : allDocs.where((t) {
+            final details = (t['details'] ?? '').toString().toLowerCase();
+            return details.contains(query);
+          }).toList();
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final ds = docs[index];
-            final dt = asDateTime(ds.data()["date"]);
-            final formattedDate = dt == null
-                ? "Unknown date"
-                : DateFormat('MMM dd, yyyy • hh:mm a').format(dt);
-            final details = (ds.data()["details"] ?? '').toString();
-            final type = (ds.data()["type"] ?? '').toString();
-            final amount = asDouble(ds.data()["amount"]);
-            final summary = asDouble(ds.data()["summary"]);
-            final idbank = (ds.data()["idbank"]).toString();
-            final idaccount = (ds.data()["idaccount"]).toString();
-            final bankName = _allbanks
-                    .firstWhereOrNull((b) => b.allidbank == idbank)
-                    ?.allnamebank ??
-                'Unknown Bank';
-            final accountName = _allaccounts
-                    .firstWhereOrNull((a) => a.allidaccount == idaccount)
-                    ?.allnameaccount ??
-                'Unknown Account';
+    if (docs.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(36),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(26),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.1),
+                      const Color.fromARGB(255, 29, 86, 109).withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.2),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  size: 36,
+                  color: const Color.fromARGB(255, 74, 111, 190).withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "No transactions yet",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey[800],
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Tap the button below to add your first transaction",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: docs.length,
+      itemBuilder: (context, index) {
+        final t = docs[index];
+        final dt = t['date'] as DateTime?;
+        final formattedDate = dt == null
+            ? "Unknown date"
+            : DateFormat('MMM dd, yyyy • hh:mm a').format(dt);
+        final details = (t['details'] ?? '').toString();
+        final type = (t['type'] ?? '').toString();
+        final amount = t['amount'] as double? ?? 0.0;
+        final summary = t['summary'] as double? ?? 0.0;
+        final idbank = t['idbank'].toString();
+        final idaccount = t['idaccount'].toString();
+        final bankName = cache.getBankName(idbank);
+        final accountName = cache.getAccountName(idaccount);
 
             MaterialColor typeColor;
             IconData typeIcon;
@@ -1581,7 +1501,7 @@ class _TransactionsState extends State<Transactions> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(24),
-                  onTap: () => _showTransactionModal(editId: ds.id),
+                  onTap: () => _showTransactionModal(editId: t['idtransaction'].toString()),
                   child: Padding(
                     padding: const EdgeInsets.all(18),
                     child: Row(
@@ -1711,7 +1631,7 @@ class _TransactionsState extends State<Transactions> {
 
                         // Premium Delete button
                         InkWell(
-                          onTap: () => _confirmDelete(ds.data()["idtransaction"].toString()),
+                          onTap: () => _confirmDelete(t['idtransaction'].toString()),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.all(10),
@@ -1739,8 +1659,6 @@ class _TransactionsState extends State<Transactions> {
             );
           },
         );
-      },
-    );
   }
 
   Future<void> _confirmDelete(String idTransaction) async {
