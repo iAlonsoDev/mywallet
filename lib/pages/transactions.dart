@@ -130,9 +130,11 @@ class _TransactionsState extends State<Transactions> {
   Account? _selectedAccount;
 
   bool _isLoading = true;
+  bool _isProcessing = false;
 
   Future<void> getOnTheLoad() async {
     await AppCache().loadStaticData();
+    await fetchBanksData();
     await getTotal();
     if (mounted) setState(() { _isLoading = false; });
   }
@@ -141,7 +143,6 @@ class _TransactionsState extends State<Transactions> {
   void initState() {
     super.initState();
     getOnTheLoad();
-    fetchBanksData();
     amountcontroller.addListener(_handleAmountChange);
   }
 
@@ -419,6 +420,10 @@ class _TransactionsState extends State<Transactions> {
       await _loadTransactionForEdit(editId);
     } else {
       _clearForm();
+      // Esperar a que los bancos carguen
+      while (_banks.isEmpty && _isLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
       // Auto-load first bank and its first account for new transactions
       if (_banks.isNotEmpty) {
         final firstBank = _banks.first;
@@ -881,28 +886,34 @@ class _TransactionsState extends State<Transactions> {
                               ),
                             ),
                             onPressed: () async {
-                              if (idedit.isEmpty) {
-                                final savedBankId = idbankcontroller;
-                                final savedAccountId = idaccountcontroller;
-                                await _addTransaction();
-                                // Restaurar banco y cuenta seleccionados antes de guardar
-                                final bank = _banks.firstWhereOrNull((b) => b.idbank == savedBankId);
-                                final account = _accounts.firstWhereOrNull((a) => a.idaccount == savedAccountId);
-                                setModalState(() {
-                                  _selectedBank = bank;
-                                  _selectedAccount = account;
-                                  if (bank != null) idbankcontroller = savedBankId;
-                                  if (account != null) idaccountcontroller = savedAccountId;
-                                });
-                                setState(() {
-                                  _selectedBank = bank;
-                                  _selectedAccount = account;
-                                  if (bank != null) idbankcontroller = savedBankId;
-                                  if (account != null) idaccountcontroller = savedAccountId;
-                                });
-                              } else {
-                                await _updateTransaction();
-                                Navigator.pop(context);
+                              if (_isProcessing) return;
+                              _isProcessing = true;
+                              try {
+                                if (idedit.isEmpty) {
+                                  final savedBankId = idbankcontroller;
+                                  final savedAccountId = idaccountcontroller;
+                                  await _addTransaction();
+                                  // Restaurar banco y cuenta seleccionados antes de guardar
+                                  final bank = _banks.firstWhereOrNull((b) => b.idbank == savedBankId);
+                                  final account = _accounts.firstWhereOrNull((a) => a.idaccount == savedAccountId);
+                                  setModalState(() {
+                                    _selectedBank = bank;
+                                    _selectedAccount = account;
+                                    if (bank != null) idbankcontroller = savedBankId;
+                                    if (account != null) idaccountcontroller = savedAccountId;
+                                  });
+                                  setState(() {
+                                    _selectedBank = bank;
+                                    _selectedAccount = account;
+                                    if (bank != null) idbankcontroller = savedBankId;
+                                    if (account != null) idaccountcontroller = savedAccountId;
+                                  });
+                                } else {
+                                  await _updateTransaction();
+                                  if (mounted) Navigator.pop(context);
+                                }
+                              } finally {
+                                if (mounted) _isProcessing = false;
                               }
                             },
                             child: Row(
@@ -1501,7 +1512,7 @@ class _TransactionsState extends State<Transactions> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(24),
-                  onTap: () => _showTransactionModal(editId: t['idtransaction'].toString()),
+                  onTap: _isProcessing ? null : () => _showTransactionModal(editId: t['idtransaction'].toString()),
                   child: Padding(
                     padding: const EdgeInsets.all(18),
                     child: Row(
@@ -1631,7 +1642,7 @@ class _TransactionsState extends State<Transactions> {
 
                         // Premium Delete button
                         InkWell(
-                          onTap: () => _confirmDelete(t['idtransaction'].toString()),
+                          onTap: _isProcessing ? null : () => _confirmDelete(t['idtransaction'].toString()),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.all(10),
@@ -1662,38 +1673,46 @@ class _TransactionsState extends State<Transactions> {
   }
 
   Future<void> _confirmDelete(String idTransaction) async {
-    final ok = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("Confirm Delete"),
-            content: const Text(
-              "Are you sure you want to delete this transaction?",
+    if (_isProcessing) return;
+    _isProcessing = true;
+    try {
+      final ok = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Confirm Delete"),
+              content: const Text(
+                "Are you sure you want to delete this transaction?",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Delete"),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Delete"),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+          ) ??
+          false;
 
-    if (!ok) return;
+      if (!ok) return;
 
-    await DatabaseMethods().deleteTransactionDetails(idTransaction);
-    toastification.show(
-      context: context,
-      title: const Text("Transaction deleted successfully"),
-      type: ToastificationType.error,
-      autoCloseDuration: const Duration(seconds: 2),
-    );
-    _clearForm();
-    await _afterWriteRefresh();
+      await DatabaseMethods().deleteTransactionDetails(idTransaction);
+      if (mounted) {
+        toastification.show(
+          context: context,
+          title: const Text("Transaction deleted successfully"),
+          type: ToastificationType.error,
+          autoCloseDuration: const Duration(seconds: 2),
+        );
+      }
+      _clearForm();
+      await _afterWriteRefresh();
+    } finally {
+      if (mounted) _isProcessing = false;
+    }
   }
 
   Future<void> _loadTransactionForEdit(String docId) async {
