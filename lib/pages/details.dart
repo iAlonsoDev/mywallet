@@ -11,6 +11,15 @@ class Details extends StatefulWidget {
 }
 
 class _DetailsState extends State<Details> {
+  static const _bankGradients = [
+    [Color(0xFF6366F1), Color(0xFF4338CA)],
+    [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+    [Color(0xFF06B6D4), Color(0xFF0891B2)],
+    [Color(0xFF10B981), Color(0xFF059669)],
+    [Color(0xFFF59E0B), Color(0xFFD97706)],
+    [Color(0xFFEF4444), Color(0xFFDC2626)],
+  ];
+
   final cache = AppCache();
   bool isLoading = true;
 
@@ -43,12 +52,14 @@ class _DetailsState extends State<Details> {
     return accounts.fold(0.0, (sum, account) => sum + (account['totalAmount'] as double));
   }
 
+  // ─── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        backgroundColor: Color(0xFFF1F5F9),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -56,619 +67,602 @@ class _DetailsState extends State<Details> {
     final totalBalance = _getTotalBalance(accounts);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshData,
-          color: Colors.deepPurple[600],
-          child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 36),
+      backgroundColor: const Color(0xFFF1F5F9),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: Colors.blue,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHero(accounts, totalBalance),
+              Transform.translate(
+                offset: const Offset(0, -80),
+                child: Column(
+                  children: [
+                    _buildStatsRow(accounts),
+                    const SizedBox(height: 20),
+                    _buildAccountsList(accounts, totalBalance),
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                        // Clean Header
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFF8B5CF6),
-                                      const Color(0xFF7C3AED),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(18),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                    BoxShadow(
-                                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(Icons.dashboard_rounded, color: Colors.white, size: 26),
-                              ),
-                              const SizedBox(width: 18),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Account Overview",
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.grey[900],
-                                        letterSpacing: -0.8,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "Your financial summary",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 0.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+  // ─── Hero ─────────────────────────────────────────────────────────────────
+
+  Widget _buildHero(List<Map<String, dynamic>> accounts, double totalBalance) {
+    final isPositive = totalBalance >= 0;
+
+    return ClipPath(
+      clipper: _DetailsHeroClipper(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 80),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0A0F1E), Color(0xFF0F172A), Color(0xFF14532D)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 6),
+
+              // Header row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15)),
+                    ),
+                    child: const Icon(
+                      Icons.analytics_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Account Overview',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                            height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        Text(
+                          'Your financial summary',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.55),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Accounts count chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      '${accounts.length} accounts',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Refresh button
+                  GestureDetector(
+                    onTap: _refreshData,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15)),
+                      ),
+                      child: const Icon(
+                        Icons.refresh_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-                        // Clean Balance Card
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                                width: 1.5,
+              const SizedBox(height: 28),
+
+              // Balance label
+              Text(
+                'Total Balance',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 6),
+
+              // Balance amount + trend pill
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      formatAmount(totalBalance),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.5,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: (isPositive
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444))
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: (isPositive
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444))
+                            .withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPositive
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
+                          color: isPositive
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          isPositive ? 'Positive' : 'Negative',
+                          style: TextStyle(
+                            color: isPositive
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Stats Row ────────────────────────────────────────────────────────────
+
+  Widget _buildStatsRow(List<Map<String, dynamic>> accounts) {
+    final withBalance =
+        accounts.where((a) => (a['totalAmount'] as double) > 0).length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: _kpiCard(
+              label: 'Accounts',
+              value: accounts.length.toString(),
+              icon: Icons.account_circle_rounded,
+              color: const Color(0xFF06B6D4),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: _kpiCard(
+              label: 'With balance',
+              value: withBalance.toString(),
+              icon: Icons.check_circle_rounded,
+              color: const Color(0xFF10B981),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.grey[900],
+                  letterSpacing: -0.8,
+                  height: 1,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Accounts List ────────────────────────────────────────────────────────
+
+  Widget _buildAccountsList(
+      List<Map<String, dynamic>> accounts, double totalBalance) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Text(
+                'Portfolio Detail',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey[900],
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${accounts.length}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF6366F1),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Cards
+          if (accounts.isEmpty)
+            _buildEmptyState()
+          else
+            ...accounts.asMap().entries.map((entry) {
+              final index = entry.key;
+              final account = entry.value;
+              final accountName = account['nameAccount'] as String;
+              final bankName = account['nameBank'] as String;
+              final bankImage = account['bankImage'] as String;
+              final accountAmount = account['totalAmount'] as double;
+              final accountId = account['accountId'] as String;
+
+              // Gradient by index
+              final gradientColors =
+                  _bankGradients[index % _bankGradients.length];
+
+              // Calculate percentage
+              final percentage = totalBalance != 0
+                  ? (accountAmount.abs() / totalBalance.abs() * 100)
+                  : 0.0;
+              final isPositive = accountAmount >= 0;
+
+              final bankInitial =
+                  bankName.isNotEmpty ? bankName[0].toUpperCase() : '?';
+
+              return GestureDetector(
+                onTap: () => _showAccountTransactionsBottomSheet(
+                  context,
+                  accountName,
+                  accountId,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.07),
+                        blurRadius: 18,
+                        offset: const Offset(0, 4),
+                        spreadRadius: -2,
+                      ),
+                      BoxShadow(
+                        color: gradientColors[0].withValues(alpha: 0.1),
+                        blurRadius: 28,
+                        offset: const Offset(0, 8),
+                        spreadRadius: -4,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            // Bank avatar
+                            Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: gradientColors,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: gradientColors[0]
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.08),
-                                  blurRadius: 25,
-                                  offset: const Offset(0, 6),
-                                  spreadRadius: -3,
+                              child: bankImage.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: CachedNetworkImage(
+                                        imageUrl: bankImage,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) =>
+                                            Center(
+                                          child: Text(
+                                            bankInitial,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        bankInitial,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                            const SizedBox(width: 14),
+
+                            // Account info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    accountName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black87,
+                                      letterSpacing: -0.3,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: gradientColors[0]
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      bankName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: gradientColors[0],
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Amount
+                            Text(
+                              formatAmount(accountAmount),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: isPositive
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Progress bar
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Contribution",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[500],
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
                                 ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 3),
-                                ),
-                                BoxShadow(
-                                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                                  blurRadius: 35,
-                                  offset: const Offset(0, 10),
-                                  spreadRadius: -8,
+                                Text(
+                                  "${percentage.toStringAsFixed(1)}%",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: gradientColors[0],
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                  ),
                                 ),
                               ],
                             ),
-                                child: Column(
+                            const SizedBox(height: 6),
+                            Container(
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Stack(
                                   children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Total Balance",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey[600],
-                                                  fontWeight: FontWeight.w700,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                formatAmount(totalBalance),
-                                                style: TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: totalBalance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                                                  letterSpacing: -1.5,
-                                                  height: 1.2,
-                                                ),
-                                              ),
-                                            ],
+                                    FractionallySizedBox(
+                                      widthFactor:
+                                          (percentage / 100).clamp(0.0, 1.0),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: gradientColors,
                                           ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: totalBalance >= 0
-                                                  ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                                                  : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: gradientColors[0]
+                                                  .withValues(alpha: 0.4),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
                                             ),
-                                            borderRadius: BorderRadius.circular(20),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: (totalBalance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                                    .withValues(alpha: 0.4),
-                                                blurRadius: 20,
-                                                offset: const Offset(0, 8),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            totalBalance >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 14),
-                                    Container(
-                                      height: 1,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.transparent,
-                                            Colors.grey[300]!,
-                                            Colors.transparent,
                                           ],
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 14),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                      children: [
-                                        _buildStatChip(
-                                          "Accounts",
-                                          accounts.length.toString(),
-                                          Icons.account_balance_wallet_rounded,
-                                          Colors.blue,
-                                        ),
-                                        Container(
-                                          width: 1,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.transparent,
-                                                Colors.grey[300]!,
-                                                Colors.transparent,
-                                              ],
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                            ),
-                                          ),
-                                        ),
-                                        _buildStatChip(
-                                          "Active",
-                                          accounts.where((a) => (a['totalAmount'] as double) > 0).length.toString(),
-                                          Icons.check_circle_rounded,
-                                          Colors.green,
-                                        ),
-                                      ],
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-
-                        // Premium List Header
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFF6366F1),
-                                      const Color(0xFF8B5CF6),
-                                    ],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  ),
-                                  borderRadius: BorderRadius.circular(3),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                "Accounts Detail",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.grey[900],
-                                  letterSpacing: -0.8,
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFF6366F1).withValues(alpha: 0.15),
-                                      const Color(0xFF8B5CF6).withValues(alpha: 0.08),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.list_alt_rounded, size: 16, color: const Color(0xFF6366F1)),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      "${accounts.length} accounts",
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF6366F1),
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
-
-                        // Premium Account Cards with Progress Bars
-                        if (accounts.isEmpty)
-                          _buildEmptyState()
-                        else
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              children: accounts.map((account) {
-                                final accountName = account['nameAccount'];
-                                final bankName = account['nameBank'];
-                                final bankImage = account['bankImage'];
-                                final accountAmount = account['totalAmount'] as double;
-
-                                // Calculate percentage contribution to total
-                                final percentage = totalBalance != 0
-                                    ? (accountAmount.abs() / totalBalance.abs() * 100)
-                                    : 0.0;
-                                final isPositive = accountAmount >= 0;
-
-                                final accountId = account['accountId'] as String;
-
-                                return GestureDetector(
-                                  onTap: () => _showAccountTransactionsBottomSheet(
-                                    context,
-                                    accountName,
-                                    accountId,
-                                  ),
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(24),
-                                      border: Border.all(
-                                        color: isPositive
-                                            ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                                            : const Color(0xFFEF4444).withValues(alpha: 0.2),
-                                        width: 1.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 4),
-                                          spreadRadius: -2,
-                                        ),
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.04),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                        BoxShadow(
-                                          color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                              .withValues(alpha: 0.12),
-                                          blurRadius: 30,
-                                          offset: const Offset(0, 8),
-                                          spreadRadius: -5,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            // Premium Bank Image with Gradient
-                                            Container(
-                                              width: 60,
-                                              height: 60,
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(18),
-                                                gradient: LinearGradient(
-                                                  colors: isPositive
-                                                      ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                                                      : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                                        .withValues(alpha: 0.3),
-                                                    blurRadius: 15,
-                                                    offset: const Offset(0, 5),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: bankImage.isNotEmpty
-                                                  ? ClipRRect(
-                                                      borderRadius: BorderRadius.circular(18),
-                                                      child: CachedNetworkImage(
-                                                        imageUrl: bankImage,
-                                                        fit: BoxFit.cover,
-                                                        placeholder: (context, url) => Center(
-                                                          child: CircularProgressIndicator(
-                                                            strokeWidth: 2.5,
-                                                            color: Colors.white,
-                                                          ),
-                                                        ),
-                                                        errorWidget: (context, url, error) => Icon(
-                                                          Icons.account_balance_rounded,
-                                                          size: 24,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : Icon(
-                                                      Icons.account_balance_rounded,
-                                                      size: 24,
-                                                      color: Colors.white,
-                                                    ),
-                                            ),
-                                            const SizedBox(width:12),
-
-                                            // Account Info
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    accountName,
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: Colors.black87,
-                                                      letterSpacing: -0.3,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.business_rounded,
-                                                        size: 14,
-                                                        color: Colors.grey[500],
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Expanded(
-                                                        child: Text(
-                                                          bankName,
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            color: Colors.grey[600],
-                                                            fontWeight: FontWeight.w600,
-                                                          ),
-                                                          overflow: TextOverflow.ellipsis,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            
-                                            Text(
-                                              formatAmount(accountAmount),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w900,
-                                                color: isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                                                letterSpacing: -0.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 8),
-
-                                        // Premium Progress Bar with Gradient
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  "Contribution to Total",
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey[500],
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.3,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "${percentage.toStringAsFixed(1)}%",
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                                                    fontWeight: FontWeight.w800,
-                                                    letterSpacing: 0.3,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Container(
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[100],
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Stack(
-                                                  children: [
-                                                    FractionallySizedBox(
-                                                      widthFactor: percentage / 100,
-                                                      child: Container(
-                                                        decoration: BoxDecoration(
-                                                          gradient: LinearGradient(
-                                                            colors: isPositive
-                                                                ? [
-                                                                    const Color(0xFF10B981),
-                                                                    const Color(0xFF059669),
-                                                                    const Color(0xFF047857),
-                                                                  ]
-                                                                : [
-                                                                    const Color(0xFFEF4444),
-                                                                    const Color(0xFFDC2626),
-                                                                    const Color(0xFFB91C1C),
-                                                                  ],
-                                                          ),
-                                                          boxShadow: [
-                                                            BoxShadow(
-                                                              color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                                                  .withValues(alpha: 0.5),
-                                                              blurRadius: 8,
-                                                              offset: const Offset(0, 2),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
                 ),
-              ),
-            );
-          }
-
-  Widget _buildStatChip(String label, String value, IconData icon, MaterialColor color) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color[400]!.withValues(alpha: 0.2),
-                color[600]!.withValues(alpha: 0.1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color[300]!.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color[400]!.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: color[700], size: 24),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            color: Colors.grey[900],
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
+              );
+            }),
+        ],
+      ),
     );
   }
+
+  // ─── Preserved helpers ────────────────────────────────────────────────────
 
   Widget _buildEmptyState() {
     return Padding(
@@ -1024,9 +1018,9 @@ class _DetailsState extends State<Details> {
                                   Expanded(
                                     child: Text(
                                       details,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 13,
-                                        color: const Color.fromARGB(255, 39, 39, 39),
+                                        color: Color.fromARGB(255, 39, 39, 39),
                                         fontWeight: FontWeight.w500,
                                       ),
                                       overflow: TextOverflow.ellipsis,
@@ -1037,10 +1031,10 @@ class _DetailsState extends State<Details> {
                               ),
                               Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.calendar_today_rounded,
                                     size: 11,
-                                    color: const Color.fromARGB(255, 117, 116, 116),
+                                    color: Color.fromARGB(255, 117, 116, 116),
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
@@ -1051,7 +1045,6 @@ class _DetailsState extends State<Details> {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  
                                 ],
                               ),
                             ],
@@ -1080,4 +1073,20 @@ class _DetailsState extends State<Details> {
       ),
     );
   }
+}
+
+// ─── Clipper ──────────────────────────────────────────────────────────────────
+
+class _DetailsHeroClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    return Path()
+      ..lineTo(0, size.height - 50)
+      ..quadraticBezierTo(size.width / 2, size.height, size.width, size.height - 50)
+      ..lineTo(size.width, 0)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
