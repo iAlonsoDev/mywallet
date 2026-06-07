@@ -1531,7 +1531,7 @@ class _TransactionsState extends State<Transactions> {
         final dt = t['date'] as DateTime?;
         final formattedDate = dt == null
             ? "Unknown"
-            : DateFormat('MMM dd • hh:mm a').format(dt);
+            : DateFormat('dd \'de\' MMM yyyy - hh:mm a').format(dt);
         final details = (t['details'] ?? '').toString();
         final type = (t['type'] ?? '').toString();
         final amount = t['amount'] as double? ?? 0.0;
