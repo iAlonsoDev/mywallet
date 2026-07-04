@@ -171,12 +171,27 @@ class _TransactionsState extends State<Transactions> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      body: Column(
-        children: [
-          _buildHero(),
-          _buildSearchSection(),
-          Expanded(child: _allTransactionsDetails()),
-        ],
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            _buildHero(),
+            Transform.translate(
+              offset: const Offset(0, -80),
+              child: Column(
+                children: [
+                  _buildSearchSection(),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: _allTransactionsDetails(),
+                  ),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _buildFAB(),
     );
@@ -193,7 +208,7 @@ class _TransactionsState extends State<Transactions> {
       clipper: _TxHeroClipper(),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 80),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0A0F1E), Color(0xFF0F172A), Color(0xFF0C4A6E)],
@@ -211,17 +226,17 @@ class _TransactionsState extends State<Transactions> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.15)),
                     ),
                     child: const Icon(
                       Icons.swap_horiz_rounded,
                       color: Colors.white,
-                      size: 20,
+                      size: 18,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -270,7 +285,7 @@ class _TransactionsState extends State<Transactions> {
                 ],
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
 
               // Balance label
               Text(
@@ -293,7 +308,7 @@ class _TransactionsState extends State<Transactions> {
                       formatAmountNum(totSummary),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 30,
+                        fontSize: 28,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -1.5,
                         height: 1,
@@ -302,7 +317,7 @@ class _TransactionsState extends State<Transactions> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 7),
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: (isPositive
                               ? const Color(0xFF10B981)
@@ -364,85 +379,102 @@ class _TransactionsState extends State<Transactions> {
                 (t['details'] ?? '').toString().toLowerCase().contains(query))
             .length;
 
-    return Container(
-      color: const Color(0xFFF1F5F9),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'All Transactions',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.grey[900],
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$filteredCount',
-                  style: const TextStyle(
-                    fontSize: 12,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'All Transactions',
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF10B981),
+                    color: Colors.grey[900],
+                    letterSpacing: -0.5,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
-              hintText: "Search by description...",
-              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-              prefixIcon:
-                  Icon(Icons.search_rounded, color: Colors.grey[400], size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.close_rounded,
-                          color: Colors.grey[400], size: 18),
-                      onPressed: () => setState(() {
-                        _searchController.clear();
-                        _searchQuery = '';
-                      }),
-                    )
-                  : null,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide:
-                    BorderSide(color: Colors.grey[200]!, width: 1.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide:
-                    BorderSide(color: Colors.grey[200]!, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide:
-                    const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$filteredCount',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: "Search by description...",
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                prefixIcon:
+                    Icon(Icons.search_rounded, color: Colors.grey[400], size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.close_rounded,
+                            color: Colors.grey[400], size: 18),
+                        onPressed: () => setState(() {
+                          _searchController.clear();
+                          _searchQuery = '';
+                        }),
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:
+                      BorderSide(color: Colors.grey[200]!, width: 1.5),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:
+                      BorderSide(color: Colors.grey[200]!, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1561,22 +1593,23 @@ class _TransactionsState extends State<Transactions> {
         final bankInitial = bankName.isNotEmpty
             ? bankName[0].toUpperCase()
             : '?';
+        final accountName = cache.getAccountName(idaccount);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-                spreadRadius: -2,
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 5),
+                spreadRadius: -1,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
+                color: gradientColors[0].withValues(alpha: 0.08),
+                blurRadius: 12,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -1584,30 +1617,30 @@ class _TransactionsState extends State<Transactions> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               onTap: _isProcessing
                   ? null
                   : () => _showTransactionModal(
                       editId: t['idtransaction'].toString()),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Row(
                   children: [
-                    // Bank initial avatar
+                    // Bank gradient avatar - larger and more prominent
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: gradientColors,
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: gradientColors[0].withValues(alpha: 0.35),
-                            blurRadius: 10,
+                            color: gradientColors[0].withValues(alpha: 0.4),
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -1617,45 +1650,78 @@ class _TransactionsState extends State<Transactions> {
                           bankInitial,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                            letterSpacing: -0.8,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
 
-                    // Details + type chip
+                    // Account info - premium layout
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Description - FIRST LINE
+                          if (details.isNotEmpty)
+                            Text(
+                              details,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          if (details.isEmpty)
+                            Text(
+                              accountName,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          const SizedBox(height: 3),
+                          // Bank - Account name - SECOND LINE
                           Text(
-                            details.isEmpty ? bankName : details,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black87,
-                              letterSpacing: -0.3,
+                            '$bankName - $accountName',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                              letterSpacing: 0.1,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           const SizedBox(height: 4),
+                          // Type chip + Date - THIRD LINE
                           Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                    horizontal: 7, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: typeChipColor.withValues(alpha: 0.1),
+                                  color: typeChipColor.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: typeChipColor.withValues(alpha: 0.3),
+                                    width: 0.8,
+                                  ),
                                 ),
                                 child: Text(
                                   typeLabel,
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 8,
                                     fontWeight: FontWeight.w800,
                                     color: typeChipColor,
                                     letterSpacing: 0.3,
@@ -1667,9 +1733,10 @@ class _TransactionsState extends State<Transactions> {
                                 child: Text(
                                   formattedDate,
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 8,
                                     color: Colors.grey[500],
                                     fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.1,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -1680,11 +1747,12 @@ class _TransactionsState extends State<Transactions> {
                       ),
                     ),
 
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
 
-                    // Amount + summary column
+                    // Amount + summary column - Premium right side
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           formatAmountNum(amount),
@@ -1693,23 +1761,28 @@ class _TransactionsState extends State<Transactions> {
                             fontWeight: FontWeight.w900,
                             color: typeChipColor,
                             letterSpacing: -0.5,
+                            height: 1,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: Colors.grey[200]!,
+                              width: 0.5,
+                            ),
                           ),
                           child: Text(
                             formatAmountNum(summary),
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 7,
                               fontWeight: FontWeight.w700,
                               color: Colors.grey[600],
-                              letterSpacing: -0.2,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ),
@@ -1718,26 +1791,26 @@ class _TransactionsState extends State<Transactions> {
 
                     const SizedBox(width: 8),
 
-                    // Delete button
+                    // Delete button - Premium style
                     InkWell(
                       onTap: _isProcessing
                           ? null
                           : () => _confirmDelete(
                               t['idtransaction'].toString()),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.all(7),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.25),
                             width: 1,
                           ),
                         ),
                         child: const Icon(
                           Icons.delete_rounded,
-                          size: 15,
+                          size: 13,
                           color: Color(0xFFEF4444),
                         ),
                       ),

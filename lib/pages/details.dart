@@ -49,7 +49,11 @@ class _DetailsState extends State<Details> {
   }
 
   double _getTotalBalance(List<Map<String, dynamic>> accounts) {
-    return accounts.fold(0.0, (sum, account) => sum + (account['totalAmount'] as double));
+    // Suma TODAS las transacciones sin filtrar por estado
+    return cache.transactions.fold<double>(
+      0.0,
+      (sum, transaction) => sum + ((transaction['amount'] ?? 0.0) as double),
+    );
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -728,7 +732,6 @@ class _DetailsState extends State<Details> {
 
   List<Map<String, dynamic>> _getAccountsFromCache() {
     final Map<String, double> totalAmountsByAccount = {};
-    final Map<String, String> accountToBankMap = {};
 
     // Process all transactions from cache
     for (var transaction in cache.transactions) {
@@ -752,9 +755,6 @@ class _DetailsState extends State<Details> {
         (val) => val + totalAmount,
         ifAbsent: () => totalAmount,
       );
-
-      // Store bank ID for this account
-      accountToBankMap[idAccount] = idBank;
     }
 
     if (totalAmountsByAccount.isEmpty) return [];
@@ -763,8 +763,11 @@ class _DetailsState extends State<Details> {
     final accountsData = totalAmountsByAccount.entries
         .where((entry) => double.parse(entry.value.toStringAsFixed(2)).abs() != 0.0)
         .map((entry) {
-          final accountName = cache.getAccountName(entry.key);
-          final bankId = accountToBankMap[entry.key] ?? '0';
+          final accountId = entry.key;
+          final accountName = cache.getAccountName(accountId);
+          
+          // Obtener el banco DIRECTAMENTE de los datos de la cuenta, no de las transacciones
+          final bankId = cache.accountsMap[accountId]?["idbank"] ?? '0';
           final bankName = cache.getBankName(bankId);
 
           return {
@@ -772,7 +775,7 @@ class _DetailsState extends State<Details> {
             'nameBank': bankName,
             'bankImage': cache.getBankImage(bankId),
             'totalAmount': entry.value,
-            'accountId': entry.key,
+            'accountId': accountId,
           };
         })
         .toList();
